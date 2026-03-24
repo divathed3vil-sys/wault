@@ -1,19 +1,18 @@
 package com.diva.wault
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -45,9 +44,9 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        applyDataDirectorySuffix()
         super.onCreate(savedInstanceState)
 
+        applyDataDirectorySuffix()
         readIntentExtras()
         applyFullscreen()
 
@@ -62,6 +61,7 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
             try {
                 WebView.setDataDirectorySuffix("wault_$slotNumber")
             } catch (_: Exception) {
+                // Ignore safely
             }
         }
     }
@@ -94,7 +94,6 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            fitsSystemWindows = true
         }
 
         val topBar = buildTopBar(topBarHeightPx, density)
@@ -114,7 +113,9 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
+
             setBackgroundColor(BACKGROUND_COLOR)
+
             webViewClient = WebViewClient()
             webChromeClient = WebChromeClient()
 
@@ -161,27 +162,22 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
             setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
             setColorFilter(TEXT_COLOR)
             setBackgroundColor(Color.TRANSPARENT)
-            layoutParams = LinearLayout.LayoutParams(buttonSize, buttonSize).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            }
+            layoutParams = LinearLayout.LayoutParams(buttonSize, buttonSize)
             contentDescription = "Close session"
             setOnClickListener { finish() }
         }
-        topBar.addView(backButton)
 
-        val spacer = android.view.View(this).apply {
+        val spacer = View(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 (8 * density).toInt(),
-                0
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
-        topBar.addView(spacer)
 
         val title = TextView(this).apply {
             text = label
             setTextColor(TEXT_COLOR)
             textSize = 16f
-            gravity = Gravity.CENTER_VERTICAL
             isSingleLine = true
             layoutParams = LinearLayout.LayoutParams(
                 0,
@@ -189,6 +185,9 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
                 1f
             )
         }
+
+        topBar.addView(backButton)
+        topBar.addView(spacer)
         topBar.addView(title)
 
         titleText = title
@@ -196,22 +195,18 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
     }
 
     private fun buildDesktopUserAgent(defaultAgent: String): String {
-        return if (defaultAgent.contains("Chrome/")) {
-            val chromeVersion = Regex("Chrome/[\\d.]+").find(defaultAgent)?.value ?: "Chrome/120.0.0.0"
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) $chromeVersion Safari/537.36"
-        } else {
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
+        val chromeVersion =
+            Regex("Chrome/[\\d.]+").find(defaultAgent)?.value ?: "Chrome/120.0.0.0"
+
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) $chromeVersion Safari/537.36"
     }
 
     private fun setupBackHandler() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val wv = webView
-                if (wv != null && wv.canGoBack()) {
-                    wv.goBack()
-                } else {
-                    finish()
+                webView?.let {
+                    if (it.canGoBack()) it.goBack()
+                    else finish()
                 }
             }
         })
