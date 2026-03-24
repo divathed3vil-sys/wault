@@ -51,6 +51,16 @@ class AccountService {
     return accounts.length < maxAccounts;
   }
 
+  int? getNextFreeSlot(List<Account> accounts, int maxAccounts) {
+    final usedSlots = accounts.map((a) => a.processSlot).toSet();
+    for (int i = 0; i < maxAccounts; i++) {
+      if (!usedSlots.contains(i)) {
+        return i;
+      }
+    }
+    return null;
+  }
+
   Future<Account?> createAccount({
     required String label,
     required String accentColorHex,
@@ -62,15 +72,7 @@ class AccountService {
       return null;
     }
 
-    final usedSlots = accounts.map((a) => a.processSlot).toSet();
-    int? nextSlot;
-    for (int i = 0; i < maxAccounts; i++) {
-      if (!usedSlots.contains(i)) {
-        nextSlot = i;
-        break;
-      }
-    }
-
+    final nextSlot = getNextFreeSlot(accounts, maxAccounts);
     if (nextSlot == null) {
       return null;
     }

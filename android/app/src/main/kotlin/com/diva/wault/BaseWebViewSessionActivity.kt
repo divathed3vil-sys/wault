@@ -13,11 +13,13 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -29,6 +31,7 @@ abstract class BaseWebViewSessionActivity : Activity() {
     private var webView: WebView? = null
     private var titleView: TextView? = null
     private var controlReceiver: BroadcastReceiver? = null
+    private var sessionContainer: ViewGroup? = null
 
     private var accountId: String = ""
     private var accountLabel: String = ""
@@ -43,6 +46,8 @@ abstract class BaseWebViewSessionActivity : Activity() {
         private const val WHATSAPP_WEB_URL = "https://web.whatsapp.com"
         private const val BACKGROUND_COLOR = "#0A0A0F"
         private const val TOP_BAR_COLOR = "#1A1A2E"
+        private const val DESKTOP_USER_AGENT =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,34 +145,43 @@ abstract class BaseWebViewSessionActivity : Activity() {
         topBar.addView(title)
         topBar.addView(closeButton)
 
-        val web = WebView(this).apply {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0,
                 1f
             )
-            setBackgroundColor(Color.parseColor(BACKGROUND_COLOR))
         }
 
         titleView = title
-        webView = web
+        sessionContainer = container
 
         root.addView(topBar)
-        root.addView(web)
+        root.addView(container)
 
         return root
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
-        val wv = webView ?: return
+        val container = sessionContainer ?: return
+        container.removeAllViews()
+
+        val wv = WebView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.parseColor(BACKGROUND_COLOR))
+        }
 
         wv.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
             databaseEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
-            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             useWideViewPort = true
             loadWithOverviewMode = true
             setSupportZoom(false)
@@ -178,6 +192,7 @@ abstract class BaseWebViewSessionActivity : Activity() {
             mediaPlaybackRequiresUserGesture = false
             setSupportMultipleWindows(false)
             javaScriptCanOpenWindowsAutomatically = false
+            userAgentString = DESKTOP_USER_AGENT
         }
 
         wv.overScrollMode = WebView.OVER_SCROLL_NEVER
@@ -211,12 +226,80 @@ abstract class BaseWebViewSessionActivity : Activity() {
         wv.webViewClient = WaultWebViewClient(
             onPageFinishedCallback = { _ -> },
             onRenderProcessGoneCallback = {
+                showSessionErrorUi("Session interrupted")
                 EventBroadcaster.sendSessionCrashed(this, accountId)
                 EventBroadcaster.sendSessionError(this, accountId, "Render process gone")
             }
         )
 
         wv.webChromeClient = WaultChromeClient()
+
+        webView = wv
+        container.addView(wv)
+    }
+
+    private fun showSessionErrorUi(message: String) {
+        val container = sessionContainer ?: return
+        container.removeAllViews()
+
+        val density = resources.displayMetrics.density
+        val buttonHeight = (44 * density).toInt()
+
+        val errorLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setPadding(32, 32, 32, 32)
+        }
+
+        val title = TextView(this).apply {
+            text = "Session interrupted"
+            setTextColor(Color.WHITE)
+            textSize = 20f
+            gravity = Gravity.CENTER
+        }
+
+        val body = TextView(this).apply {
+            text = message
+            setTextColor(Color.LTGRAY)
+            textSize = 14f
+            gravity = Gravity.CENTER
+        }
+
+        val retry = Button(this).apply {
+            text = "Retry"
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                buttonHeight
+            ).apply {
+                topMargin = 24
+            }
+            setOnClickListener {
+                setupWebView()
+                loadInitialUrl()
+            }
+        }
+
+        val close = Button(this).apply {
+            text = "Close"
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                buttonHeight
+            ).apply {
+                topMargin = 12
+            }
+            setOnClickListener { finishSession() }
+        }
+
+        errorLayout.addView(title)
+        errorLayout.addView(body)
+        errorLayout.addView(retry)
+        errorLayout.addView(close)
+
+        container.addView(errorLayout)
     }
 
     private fun registerControlReceiver() {

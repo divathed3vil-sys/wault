@@ -1,7 +1,6 @@
 // lib/screens/settings_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wault/models/account.dart';
 import 'package:wault/services/account_service.dart';
 import 'package:wault/services/engine_service.dart';
@@ -21,23 +20,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   List<Account> _accounts = [];
   bool _isLoading = true;
-  bool _darkModeEnabled = true;
   Map<String, dynamic> _deviceInfo = {};
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
     _loadAccounts();
     _loadDeviceInfo();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _darkModeEnabled = prefs.getBool('darkModeEnabled') ?? true;
-    });
   }
 
   Future<void> _loadAccounts() async {
@@ -57,15 +46,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _toggleDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkModeEnabled', value);
-    if (!mounted) return;
-    setState(() {
-      _darkModeEnabled = value;
-    });
-  }
-
   Future<void> _deleteAllAccounts() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -76,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(color: WaultColors.textPrimary),
         ),
         content: const Text(
-          'This will permanently delete all accounts and close all sessions. This action cannot be undone.',
+          'This will remove all accounts from your vault, close all sessions, and free all slots for reuse.',
           style: TextStyle(color: WaultColors.textSecondary),
         ),
         actions: [
@@ -109,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('All accounts deleted'),
+        content: Text('All accounts deleted and all slots freed'),
         duration: Duration(seconds: 2),
       ),
     );
@@ -120,6 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final tier = _deviceInfo['tier']?.toString() ?? 'UNKNOWN';
     final maxAccounts = _deviceInfo['maxAccounts']?.toString() ?? '-';
     final totalRam = _deviceInfo['totalRamMB']?.toString() ?? '-';
+    final availableRam = _deviceInfo['availableRamMB']?.toString() ?? '-';
 
     return Scaffold(
       backgroundColor: WaultColors.background,
@@ -147,19 +128,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: [
                 _buildSection(
-                  title: 'Appearance',
-                  children: [
-                    _buildSwitchTile(
-                      icon: Icons.dark_mode,
-                      title: 'Dark Mode',
-                      subtitle: 'Use dark theme',
-                      value: _darkModeEnabled,
-                      onChanged: _toggleDarkMode,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSection(
                   title: 'Account Management',
                   children: [
                     _buildInfoTile(
@@ -170,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildActionTile(
                       icon: Icons.delete_sweep,
                       title: 'Delete All Accounts',
-                      subtitle: 'Remove all accounts and close all sessions',
+                      subtitle: 'Remove all accounts and free all slots',
                       onTap: _deleteAllAccounts,
                       isDestructive: true,
                     ),
@@ -189,6 +157,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       icon: Icons.storage,
                       title: 'Total RAM',
                       subtitle: '$totalRam MB',
+                    ),
+                    _buildInfoTile(
+                      icon: Icons.speed,
+                      title: 'Available RAM',
+                      subtitle: '$availableRam MB',
                     ),
                     _buildInfoTile(
                       icon: Icons.layers,
@@ -232,35 +205,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(children: children),
         ),
       ],
-    );
-  }
-
-  Widget _buildSwitchTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: WaultColors.primary),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: WaultColors.textPrimary,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(fontSize: 14, color: WaultColors.textSecondary),
-      ),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: WaultColors.primary,
-      ),
     );
   }
 

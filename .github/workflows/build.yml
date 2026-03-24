@@ -1,9 +1,12 @@
+# .github/workflows/build.yml
+
 name: Build WAult APK
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,8 +27,11 @@ jobs:
         with:
           channel: stable
 
-      - name: Install dependencies
+      - name: Flutter pub get
         run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
 
       - name: Build release APK
         run: flutter build apk --release

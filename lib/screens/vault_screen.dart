@@ -83,6 +83,19 @@ class _VaultScreenState extends State<VaultScreen> with WidgetsBindingObserver {
       updated = updated.copyWith(state: 'ACTIVE');
     } else if (event.isSessionCrashed || event.isSessionError) {
       updated = updated.copyWith(state: 'ERROR');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              event.message?.isNotEmpty == true
+                  ? event.message!
+                  : 'Session interrupted',
+            ),
+            backgroundColor: WaultColors.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } else if (event.isStateChanged &&
         event.state != null &&
         event.state!.isNotEmpty) {
@@ -116,8 +129,9 @@ class _VaultScreenState extends State<VaultScreen> with WidgetsBindingObserver {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to open session'),
+          content: Text('Failed to open session. Please try again.'),
           duration: Duration(seconds: 2),
+          backgroundColor: WaultColors.error,
         ),
       );
     }
@@ -283,7 +297,7 @@ class _VaultScreenState extends State<VaultScreen> with WidgetsBindingObserver {
             style: TextStyle(color: WaultColors.textPrimary),
           ),
           content: Text(
-            'Remove "${account.label}"? This cannot be undone.',
+            'This will remove "${account.label}" from your vault and close its current session. Slot ${account.processSlot} will become available for reuse.',
             style: const TextStyle(color: WaultColors.textSecondary),
           ),
           actions: [
@@ -308,6 +322,16 @@ class _VaultScreenState extends State<VaultScreen> with WidgetsBindingObserver {
     await _engineService.closeSession(account.id);
     await _accountService.deleteAccount(account.id);
     await _loadAccounts();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '"${account.label}" deleted. Slot ${account.processSlot} is now free.',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _showAccountOptions(Account account) {

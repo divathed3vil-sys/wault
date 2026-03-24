@@ -90,7 +90,7 @@ class MainActivity : FlutterActivity() {
             startActivity(intent)
             result.success(true)
         } catch (e: Exception) {
-            result.error("LAUNCH_FAILED", e.message, null)
+            result.error("LAUNCH_FAILED", e.message ?: "Unknown launch failure", null)
         }
     }
 
