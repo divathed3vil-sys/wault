@@ -1,11 +1,25 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_theme.dart';
+import 'package:flutter/services.dart';
 import 'package:wault/screens/splash_screen.dart';
 import 'package:wault/screens/vault_screen.dart';
-import 'package:wault/screens/settings_screen.dart';
+import 'package:wault/theme/wault_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
+
   runApp(const WaultApp());
 }
 
@@ -18,43 +32,34 @@ class WaultApp extends StatelessWidget {
       title: 'WAult',
       debugShowCheckedModeBanner: false,
       theme: WaultTheme.darkTheme,
-      home: const _AppShell(),
+      home: const AppNavigator(),
     );
   }
 }
 
-class _AppShell extends StatefulWidget {
-  const _AppShell();
+class AppNavigator extends StatefulWidget {
+  const AppNavigator({super.key});
 
   @override
-  State<_AppShell> createState() => _AppShellState();
+  State<AppNavigator> createState() => _AppNavigatorState();
 }
 
-class _AppShellState extends State<_AppShell> {
-  bool _splashDone = false;
+class _AppNavigatorState extends State<AppNavigator> {
+  bool _showSplash = true;
 
-  void _onSplashFinished() {
+  void _completeSplash() {
     if (!mounted) return;
     setState(() {
-      _splashDone = true;
+      _showSplash = false;
     });
-  }
-
-  void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) =>
-            SettingsScreen(onBack: () => Navigator.of(context).pop()),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_splashDone) {
-      return SplashScreen(onFinished: _onSplashFinished);
+    if (_showSplash) {
+      return SplashScreen(onFinished: _completeSplash);
     }
 
-    return VaultScreen(onOpenSettings: _openSettings);
+    return const VaultScreen();
   }
 }

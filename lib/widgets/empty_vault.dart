@@ -1,7 +1,8 @@
+// lib/widgets/empty_vault.dart
+
 import 'package:flutter/material.dart';
 import 'package:wault/theme/wault_colors.dart';
 import 'package:wault/widgets/shield_logo.dart';
-import 'package:wault/widgets/liquid_glass_card.dart';
 
 class EmptyVault extends StatelessWidget {
   final VoidCallback onAddAccount;
@@ -12,59 +13,46 @@ class EmptyVault extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ShieldLogo(size: 100.0, opacity: 0.4),
-            const SizedBox(height: 32.0),
-            Text(
+            const ShieldLogo(size: 100, opacity: 0.30),
+            const SizedBox(height: 32),
+            const Text(
               'Your Vault is Empty',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: WaultColors.textPrimary,
-                fontSize: 22.0,
+                fontSize: 22,
                 fontWeight: FontWeight.w600,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12.0),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Add your first WhatsApp account to get started',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: WaultColors.textSecondary,
-                fontSize: 15.0,
-                fontWeight: FontWeight.w400,
+                fontSize: 14,
+                height: 1.4,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40.0),
-            LiquidGlassCard(
-              onTap: onAddAccount,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 28.0,
-                vertical: 14.0,
-              ),
-              borderRadius: 16.0,
-              accentColor: WaultColors.primary,
-              showGlow: true,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.add_rounded,
-                    color: WaultColors.primary,
-                    size: 22.0,
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 220,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: onAddAccount,
+                icon: const Icon(Icons.add),
+                label: const Text('Add Account'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WaultColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(width: 10.0),
-                  Text(
-                    'Add Account',
-                    style: TextStyle(
-                      color: WaultColors.primary,
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

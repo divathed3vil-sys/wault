@@ -1,6 +1,7 @@
+// android/app/src/main/kotlin/com/diva/wault/WaultChromeClient.kt
+
 package com.diva.wault
 
-import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
@@ -8,12 +9,8 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 
 class WaultChromeClient(
-    private val onConsoleMessageCallback: ((String) -> Unit)? = null
+    private val onReceivedTitle: ((String) -> Unit)? = null
 ) : WebChromeClient() {
-
-    companion object {
-        private const val TAG = "WaultChromeClient"
-    }
 
     override fun onPermissionRequest(request: PermissionRequest?) {
         request?.grant(request.resources)
@@ -25,25 +22,18 @@ class WaultChromeClient(
         message: String?,
         result: JsResult?
     ): Boolean {
-        result?.confirm()
+        result?.cancel()
         return true
     }
 
-    override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-        if (consoleMessage == null) return false
-
-        val msg = "[${consoleMessage.messageLevel()}] " +
-                "${consoleMessage.sourceId()}:${consoleMessage.lineNumber()} - " +
-                consoleMessage.message()
-
-        when (consoleMessage.messageLevel()) {
-            ConsoleMessage.MessageLevel.ERROR -> Log.e(TAG, msg)
-            ConsoleMessage.MessageLevel.WARNING -> Log.w(TAG, msg)
-            else -> Log.d(TAG, msg)
+    override fun onReceivedTitle(view: WebView?, title: String?) {
+        super.onReceivedTitle(view, title)
+        if (!title.isNullOrBlank()) {
+            onReceivedTitle?.invoke(title)
         }
+    }
 
-        onConsoleMessageCallback?.invoke(msg)
-
+    override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
         return true
     }
 }

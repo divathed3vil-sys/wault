@@ -1,6 +1,7 @@
+// lib/widgets/add_account_sheet.dart
+
 import 'package:flutter/material.dart';
 import 'package:wault/theme/wault_colors.dart';
-//import 'package:wault/utils/constants.dart';
 import 'package:wault/widgets/liquid_glass_card.dart';
 
 class AddAccountSheet extends StatefulWidget {
@@ -45,9 +46,11 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
       });
       return;
     }
+
     setState(() {
       _errorText = null;
     });
+
     widget.onCreate(trimmed);
   }
 
@@ -55,12 +58,10 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
     try {
       final cleaned = hex.replaceFirst('#', '');
       if (cleaned.length == 6) {
-        final value = int.parse('FF$cleaned', radix: 16);
-        return Color(value);
+        return Color(int.parse('FF$cleaned', radix: 16));
       }
       if (cleaned.length == 8) {
-        final value = int.parse(cleaned, radix: 16);
-        return Color(value);
+        return Color(int.parse(cleaned, radix: 16));
       }
     } catch (_) {}
     return WaultColors.primary;
@@ -70,25 +71,25 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 20.0,
-        right: 20.0,
-        top: 8.0,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
+        left: 20,
+        right: 20,
+        top: 8,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDragHandle(),
-          const SizedBox(height: 16.0),
+          const SizedBox(height: 16),
           _buildTitle(),
-          const SizedBox(height: 20.0),
+          const SizedBox(height: 20),
           _buildNameField(),
-          const SizedBox(height: 20.0),
+          const SizedBox(height: 20),
           _buildColorLabel(),
-          const SizedBox(height: 10.0),
+          const SizedBox(height: 10),
           _buildColorPalette(),
-          const SizedBox(height: 24.0),
+          const SizedBox(height: 24),
           _buildCreateButton(),
         ],
       ),
@@ -98,22 +99,22 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
   Widget _buildDragHandle() {
     return Center(
       child: Container(
-        width: 40.0,
-        height: 4.0,
+        width: 40,
+        height: 4,
         decoration: BoxDecoration(
           color: WaultColors.glassBorder,
-          borderRadius: BorderRadius.circular(2.0),
+          borderRadius: BorderRadius.circular(2),
         ),
       ),
     );
   }
 
   Widget _buildTitle() {
-    return Text(
+    return const Text(
       'New Account',
       style: TextStyle(
         color: WaultColors.textPrimary,
-        fontSize: 22.0,
+        fontSize: 22,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -122,7 +123,7 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
   Widget _buildNameField() {
     return TextField(
       controller: _nameController,
-      style: TextStyle(color: WaultColors.textPrimary, fontSize: 16.0),
+      style: const TextStyle(color: WaultColors.textPrimary, fontSize: 16),
       decoration: InputDecoration(
         hintText: 'Account name',
         errorText: _errorText,
@@ -141,11 +142,11 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
   }
 
   Widget _buildColorLabel() {
-    return Text(
+    return const Text(
       'Color:',
       style: TextStyle(
         color: WaultColors.textSecondary,
-        fontSize: 14.0,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
     );
@@ -153,8 +154,8 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
 
   Widget _buildColorPalette() {
     return Wrap(
-      spacing: 12.0,
-      runSpacing: 12.0,
+      spacing: 12,
+      runSpacing: 12,
       children: widget.accentPalette.map((hex) {
         final color = _parseHexColor(hex);
         final isSelected = hex == widget.initialSelectedColorHex;
@@ -162,8 +163,8 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
         return GestureDetector(
           onTap: () => widget.onColorSelected(hex),
           child: Container(
-            width: 36.0,
-            height: 36.0,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: color,
@@ -174,17 +175,17 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
                   ? [
                       BoxShadow(
                         color: color.withOpacity(0.4),
-                        blurRadius: 10.0,
-                        spreadRadius: 1.0,
+                        blurRadius: 10,
+                        spreadRadius: 1,
                       ),
                     ]
                   : null,
             ),
             child: isSelected
-                ? Icon(
+                ? const Icon(
                     Icons.check_rounded,
                     color: WaultColors.background,
-                    size: 20.0,
+                    size: 20,
                   )
                 : null,
           ),
@@ -198,16 +199,16 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
       width: double.infinity,
       child: LiquidGlassCard(
         onTap: _handleCreate,
-        padding: const EdgeInsets.symmetric(vertical: 14.0),
-        borderRadius: 14.0,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        borderRadius: 14,
         accentColor: _parseHexColor(widget.initialSelectedColorHex),
         showGlow: true,
-        child: Center(
+        child: const Center(
           child: Text(
             'Create & Open',
             style: TextStyle(
               color: WaultColors.primary,
-              fontSize: 16.0,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
           ),

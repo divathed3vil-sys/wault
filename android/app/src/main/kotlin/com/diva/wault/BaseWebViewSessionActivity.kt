@@ -1,32 +1,37 @@
+// android/app/src/main/kotlin/com/diva/wault/BaseWebViewSessionActivity.kt
+
 package com.diva.wault
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
-import android.webkit.WebChromeClient
+import android.view.WindowManager
+import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.widget.*
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
 
-abstract class BaseWebViewSessionActivity : AppCompatActivity() {
+abstract class BaseWebViewSessionActivity : Activity() {
 
     abstract val slotNumber: Int
 
-    protected var webView: WebView? = null
-    private var titleText: TextView? = null
+    private var webView: WebView? = null
+    private var titleView: TextView? = null
+    private var controlReceiver: BroadcastReceiver? = null
 
     private var accountId: String = ""
-    private var label: String = ""
+    private var accountLabel: String = ""
     private var accentColor: String = ""
 
     companion object {
@@ -36,180 +41,237 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
         const val EXTRA_PROCESS_SLOT = "processSlot"
 
         private const val WHATSAPP_WEB_URL = "https://web.whatsapp.com"
-
-        private const val TOP_BAR_HEIGHT_DP = 48
-        private const val TOP_BAR_COLOR = 0xFF111B21.toInt()
-        private const val BACKGROUND_COLOR = 0xFF0A0A0A.toInt()
-        private const val TEXT_COLOR = 0xFFF5F5F5.toInt()
+        private const val BACKGROUND_COLOR = "#0A0A0F"
+        private const val TOP_BAR_COLOR = "#1A1A2E"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        applyDataDirectorySuffix()
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN
+        )
+
         readIntentExtras()
-        applyFullscreen()
+        setupDataDirectory()
 
         val root = buildLayout()
         setContentView(root)
 
-        setupBackHandler()
+        setupWebView()
+        registerControlReceiver()
+        loadInitialUrl()
     }
 
-    private fun applyDataDirectorySuffix() {
+    private fun readIntentExtras() {
+        accountId = intent.getStringExtra(EXTRA_ACCOUNT_ID) ?: ""
+        accountLabel = intent.getStringExtra(EXTRA_LABEL) ?: "Session"
+        accentColor = intent.getStringExtra(EXTRA_ACCENT_COLOR) ?: ""
+    }
+
+    private fun setupDataDirectory() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 WebView.setDataDirectorySuffix("wault_$slotNumber")
+            } catch (_: IllegalStateException) {
             } catch (_: Exception) {
-                // Ignore safely
             }
         }
     }
 
-    private fun readIntentExtras() {
-        accountId = intent?.getStringExtra(EXTRA_ACCOUNT_ID) ?: ""
-        label = intent?.getStringExtra(EXTRA_LABEL) ?: "Session $slotNumber"
-        accentColor = intent?.getStringExtra(EXTRA_ACCENT_COLOR) ?: ""
-    }
-
-    private fun applyFullscreen() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = BACKGROUND_COLOR
-
-        val controller = WindowInsetsControllerCompat(window, window.decorView)
-        controller.isAppearanceLightStatusBars = false
-        controller.isAppearanceLightNavigationBars = false
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun buildLayout(): ViewGroup {
+    private fun buildLayout(): LinearLayout {
         val density = resources.displayMetrics.density
-        val topBarHeightPx = (TOP_BAR_HEIGHT_DP * density).toInt()
+        val topBarHeight = (48 * density).toInt()
+        val buttonSize = (36 * density).toInt()
+        val horizontalPadding = (12 * density).toInt()
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(BACKGROUND_COLOR)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            setBackgroundColor(Color.parseColor(BACKGROUND_COLOR))
         }
-
-        val topBar = buildTopBar(topBarHeightPx, density)
-        root.addView(topBar)
-
-        val webContainer = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            )
-            setBackgroundColor(BACKGROUND_COLOR)
-        }
-
-        val wv = WebView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-
-            setBackgroundColor(BACKGROUND_COLOR)
-
-            webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
-
-            settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                databaseEnabled = true
-                cacheMode = WebSettings.LOAD_DEFAULT
-                useWideViewPort = true
-                loadWithOverviewMode = true
-                setSupportMultipleWindows(false)
-                mediaPlaybackRequiresUserGesture = false
-                allowFileAccess = false
-                allowContentAccess = false
-                userAgentString = buildDesktopUserAgent(userAgentString)
-            }
-        }
-
-        webContainer.addView(wv)
-        root.addView(webContainer)
-
-        webView = wv
-        wv.loadUrl(WHATSAPP_WEB_URL)
-
-        return root
-    }
-
-    private fun buildTopBar(heightPx: Int, density: Float): LinearLayout {
-        val paddingH = (12 * density).toInt()
-        val buttonSize = (36 * density).toInt()
 
         val topBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setBackgroundColor(TOP_BAR_COLOR)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                heightPx
+                topBarHeight
             )
-            setPadding(paddingH, 0, paddingH, 0)
+            setPadding(horizontalPadding, 0, horizontalPadding, 0)
+            setBackgroundColor(Color.parseColor(TOP_BAR_COLOR))
         }
 
         val backButton = ImageButton(this).apply {
-            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            setColorFilter(TEXT_COLOR)
+            setImageResource(android.R.drawable.ic_menu_revert)
             setBackgroundColor(Color.TRANSPARENT)
+            setColorFilter(Color.WHITE)
+            setOnClickListener { handleBackPressed() }
             layoutParams = LinearLayout.LayoutParams(buttonSize, buttonSize)
-            contentDescription = "Close session"
-            setOnClickListener { finish() }
-        }
-
-        val spacer = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                (8 * density).toInt(),
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
         }
 
         val title = TextView(this).apply {
-            text = label
-            setTextColor(TEXT_COLOR)
+            text = accountLabel
+            setTextColor(Color.WHITE)
             textSize = 16f
-            isSingleLine = true
+            maxLines = 1
+            gravity = Gravity.CENTER_VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 0,
-                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
                 1f
             )
         }
 
+        val closeButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            setBackgroundColor(Color.TRANSPARENT)
+            setColorFilter(Color.WHITE)
+            setOnClickListener { finishSession() }
+            layoutParams = LinearLayout.LayoutParams(buttonSize, buttonSize)
+        }
+
         topBar.addView(backButton)
-        topBar.addView(spacer)
         topBar.addView(title)
+        topBar.addView(closeButton)
 
-        titleText = title
-        return topBar
+        val web = WebView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            )
+            setBackgroundColor(Color.parseColor(BACKGROUND_COLOR))
+        }
+
+        titleView = title
+        webView = web
+
+        root.addView(topBar)
+        root.addView(web)
+
+        return root
     }
 
-    private fun buildDesktopUserAgent(defaultAgent: String): String {
-        val chromeVersion =
-            Regex("Chrome/[\\d.]+").find(defaultAgent)?.value ?: "Chrome/120.0.0.0"
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupWebView() {
+        val wv = webView ?: return
 
-        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) $chromeVersion Safari/537.36"
+        wv.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            setSupportZoom(false)
+            builtInZoomControls = false
+            displayZoomControls = false
+            allowFileAccess = false
+            allowContentAccess = false
+            mediaPlaybackRequiresUserGesture = false
+            setSupportMultipleWindows(false)
+            javaScriptCanOpenWindowsAutomatically = false
+        }
+
+        wv.overScrollMode = WebView.OVER_SCROLL_NEVER
+        wv.isVerticalScrollBarEnabled = false
+        wv.isHorizontalScrollBarEnabled = false
+        wv.isHapticFeedbackEnabled = false
+        wv.setOnLongClickListener { true }
+
+        CookieManager.getInstance().apply {
+            setAcceptCookie(true)
+            setAcceptThirdPartyCookies(wv, true)
+        }
+
+        val jsBridge = WaultJsBridge(
+            accountId = accountId,
+            onUnreadCountChanged = { id, count ->
+                EventBroadcaster.sendUnreadCount(this, id, count)
+            },
+            onQrVisible = { id ->
+                EventBroadcaster.sendQrVisible(this, id)
+                EventBroadcaster.sendSessionStateChanged(this, id, "COLD")
+            },
+            onLoggedInState = { id ->
+                EventBroadcaster.sendLoggedIn(this, id)
+                EventBroadcaster.sendSessionStateChanged(this, id, "ACTIVE")
+            }
+        )
+
+        wv.addJavascriptInterface(jsBridge, "WaultBridge")
+
+        wv.webViewClient = WaultWebViewClient(
+            onPageFinishedCallback = { _ -> },
+            onRenderProcessGoneCallback = {
+                EventBroadcaster.sendSessionCrashed(this, accountId)
+                EventBroadcaster.sendSessionError(this, accountId, "Render process gone")
+            }
+        )
+
+        wv.webChromeClient = WaultChromeClient()
     }
 
-    private fun setupBackHandler() {
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                webView?.let {
-                    if (it.canGoBack()) it.goBack()
-                    else finish()
+    private fun registerControlReceiver() {
+        if (controlReceiver != null) return
+
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent == null) return
+                if (intent.action != EventBroadcaster.ACTION) return
+
+                val type = intent.getStringExtra(EventBroadcaster.KEY_TYPE) ?: return
+                val targetAccountId = intent.getStringExtra(EventBroadcaster.KEY_ACCOUNT_ID) ?: ""
+
+                when (type) {
+                    EventBroadcaster.TYPE_CONTROL_CLOSE_ALL -> finishSession()
+                    EventBroadcaster.TYPE_CONTROL_CLOSE_SESSION -> {
+                        if (targetAccountId == accountId) {
+                            finishSession()
+                        }
+                    }
                 }
             }
-        })
+        }
+
+        val filter = IntentFilter(EventBroadcaster.ACTION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(receiver, filter)
+        }
+
+        controlReceiver = receiver
+    }
+
+    private fun loadInitialUrl() {
+        webView?.loadUrl(WHATSAPP_WEB_URL)
+    }
+
+    private fun handleBackPressed() {
+        val wv = webView
+        if (wv != null && wv.canGoBack()) {
+            wv.goBack()
+        } else {
+            finishSession()
+        }
+    }
+
+    private fun finishSession() {
+        EventBroadcaster.sendSessionStateChanged(this, accountId, "COLD")
+        finish()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        handleBackPressed()
     }
 
     override fun onResume() {
@@ -223,15 +285,22 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        webView?.let { wv ->
-            wv.stopLoading()
-            wv.loadUrl("about:blank")
-            (wv.parent as? ViewGroup)?.removeView(wv)
-            wv.removeAllViews()
-            wv.destroy()
+        controlReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: Exception) {
+            }
+        }
+        controlReceiver = null
+
+        webView?.apply {
+            stopLoading()
+            loadUrl("about:blank")
+            removeAllViews()
+            destroy()
         }
         webView = null
-        titleText = null
+        titleView = null
         super.onDestroy()
     }
 }

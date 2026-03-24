@@ -1,3 +1,5 @@
+// lib/widgets/account_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:wault/models/account.dart';
 import 'package:wault/theme/wault_colors.dart';
@@ -16,194 +18,195 @@ class AccountCard extends StatelessWidget {
     this.onLongPress,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final accentColor = _parseHexColor(account.accentColorHex);
-    final stateInfo = _getStateInfo(account.state);
-    final showLastSeen =
-        account.state != 'ACTIVE' &&
-        account.snapshotTimestamp != null &&
-        account.snapshotTimestamp! > 0;
-
-    return LiquidGlassCard(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      padding: const EdgeInsets.all(14.0),
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-      borderRadius: 18.0,
-      accentColor: accentColor,
-      showGlow: account.state == 'ACTIVE',
-      child: Row(
-        children: [
-          _buildAvatar(accentColor, stateInfo),
-          const SizedBox(width: 14.0),
-          Expanded(child: _buildContent(stateInfo, showLastSeen)),
-          _buildTrailing(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatar(Color accentColor, _StateInfo stateInfo) {
-    final initial = account.label.isNotEmpty
-        ? account.label[0].toUpperCase()
-        : '?';
-
-    return Stack(
-      children: [
-        Container(
-          width: 48.0,
-          height: 48.0,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: accentColor.withOpacity(0.15),
-            border: Border.all(color: accentColor.withOpacity(0.4), width: 1.5),
-          ),
-          child: Center(
-            child: Text(
-              initial,
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 20.0,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: Container(
-            width: 14.0,
-            height: 14.0,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: stateInfo.dotColor,
-              border: Border.all(color: WaultColors.surface, width: 2.0),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildContent(_StateInfo stateInfo, bool showLastSeen) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          account.label,
-          style: TextStyle(
-            color: WaultColors.textPrimary,
-            fontSize: 16.0,
-            fontWeight: FontWeight.w600,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4.0),
-        Text(
-          stateInfo.label,
-          style: TextStyle(
-            color: stateInfo.labelColor,
-            fontSize: 13.0,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        if (showLastSeen) ...[
-          const SizedBox(height: 2.0),
-          Text(
-            'Last seen ${TimeUtils.formatRelative(account.snapshotTimestamp!)}',
-            style: TextStyle(
-              color: WaultColors.textTertiary,
-              fontSize: 11.0,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildTrailing() {
-    if (account.unreadCount > 0) {
-      final displayCount = account.unreadCount > 99
-          ? '99+'
-          : account.unreadCount.toString();
-
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        decoration: BoxDecoration(
-          color: WaultColors.primary,
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: Text(
-          displayCount,
-          style: TextStyle(
-            color: WaultColors.background,
-            fontSize: 12.0,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
-    }
-
-    return Icon(
-      Icons.chevron_right_rounded,
-      color: WaultColors.textTertiary,
-      size: 24.0,
-    );
-  }
-
-  _StateInfo _getStateInfo(String state) {
-    switch (state) {
-      case 'ACTIVE':
-        return _StateInfo(
-          label: 'Active',
-          labelColor: WaultColors.primary,
-          dotColor: WaultColors.primary,
-        );
-      case 'ERROR':
-        return _StateInfo(
-          label: 'Needs attention',
-          labelColor: WaultColors.error,
-          dotColor: WaultColors.error,
-        );
-      case 'COLD':
-      default:
-        return _StateInfo(
-          label: 'Tap to open',
-          labelColor: WaultColors.textSecondary,
-          dotColor: WaultColors.textTertiary,
-        );
-    }
-  }
-
   Color _parseHexColor(String hex) {
     try {
       final cleaned = hex.replaceFirst('#', '');
       if (cleaned.length == 6) {
-        final value = int.parse('FF$cleaned', radix: 16);
-        return Color(value);
+        return Color(int.parse('FF$cleaned', radix: 16));
       }
       if (cleaned.length == 8) {
-        final value = int.parse(cleaned, radix: 16);
-        return Color(value);
+        return Color(int.parse(cleaned, radix: 16));
       }
     } catch (_) {}
     return WaultColors.primary;
   }
-}
 
-class _StateInfo {
-  final String label;
-  final Color labelColor;
-  final Color dotColor;
+  Color _stateColor() {
+    switch (account.state) {
+      case 'ACTIVE':
+        return WaultColors.activeBlue;
+      case 'ERROR':
+        return WaultColors.error;
+      case 'COLD':
+      default:
+        return WaultColors.textTertiary;
+    }
+  }
 
-  const _StateInfo({
-    required this.label,
-    required this.labelColor,
-    required this.dotColor,
-  });
+  String _stateLabel() {
+    switch (account.state) {
+      case 'ACTIVE':
+        return 'Active';
+      case 'ERROR':
+        return 'Needs attention';
+      case 'COLD':
+      default:
+        return 'Tap to open';
+    }
+  }
+
+  String _unreadText(int count) {
+    if (count > 99) return '99+';
+    return '$count';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = _parseHexColor(account.accentColorHex);
+    final initial = account.label.isNotEmpty
+        ? account.label[0].toUpperCase()
+        : '?';
+    final hasUnread = account.unreadCount > 0;
+    final hasLastActive = account.lastActiveAt > 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: LiquidGlassCard(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        accentColor: accent,
+        showGlow: hasUnread,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: accent.withOpacity(0.15),
+                          border: Border.all(
+                            color: accent.withOpacity(0.30),
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          initial,
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _stateColor(),
+                            border: Border.all(
+                              color: WaultColors.background,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          account.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: WaultColors.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _stateLabel(),
+                          style: TextStyle(
+                            color: account.state == 'ERROR'
+                                ? WaultColors.error
+                                : account.state == 'ACTIVE'
+                                ? WaultColors.activeBlue
+                                : WaultColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (hasUnread)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WaultColors.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        _unreadText(account.unreadCount),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: WaultColors.textTertiary,
+                      size: 20,
+                    ),
+                ],
+              ),
+              if (hasLastActive) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: accent.withOpacity(0.05),
+                  ),
+                  child: Text(
+                    'Last active ${TimeUtils.formatRelative(account.lastActiveAt)}',
+                    style: const TextStyle(
+                      color: WaultColors.textTertiary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

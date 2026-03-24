@@ -1,3 +1,5 @@
+// lib/widgets/account_options_sheet.dart
+
 import 'package:flutter/material.dart';
 import 'package:wault/theme/wault_colors.dart';
 
@@ -18,22 +20,17 @@ class AccountOptionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 20.0,
-        right: 20.0,
-        top: 8.0,
-        bottom: 24.0,
-      ),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDragHandle(),
-          const SizedBox(height: 16.0),
+          const SizedBox(height: 16),
           _buildHeader(),
-          const SizedBox(height: 12.0),
-          Divider(color: WaultColors.divider, height: 1.0),
-          const SizedBox(height: 4.0),
+          const SizedBox(height: 12),
+          Divider(color: WaultColors.glassBorder, height: 1),
+          const SizedBox(height: 4),
           _buildAction(
             icon: Icons.edit_outlined,
             label: 'Rename',
@@ -46,7 +43,7 @@ class AccountOptionsSheet extends StatelessWidget {
             color: WaultColors.textPrimary,
             onTap: onChangeColor,
           ),
-          Divider(color: WaultColors.divider, height: 1.0),
+          Divider(color: WaultColors.glassBorder, height: 1),
           _buildAction(
             icon: Icons.delete_outline_rounded,
             label: 'Delete',
@@ -61,11 +58,11 @@ class AccountOptionsSheet extends StatelessWidget {
   Widget _buildDragHandle() {
     return Center(
       child: Container(
-        width: 40.0,
-        height: 4.0,
+        width: 40,
+        height: 4,
         decoration: BoxDecoration(
           color: WaultColors.glassBorder,
-          borderRadius: BorderRadius.circular(2.0),
+          borderRadius: BorderRadius.circular(2),
         ),
       ),
     );
@@ -74,9 +71,9 @@ class AccountOptionsSheet extends StatelessWidget {
   Widget _buildHeader() {
     return Text(
       accountLabel,
-      style: TextStyle(
+      style: const TextStyle(
         color: WaultColors.textPrimary,
-        fontSize: 18.0,
+        fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
       maxLines: 1,
@@ -94,20 +91,20 @@ class AccountOptionsSheet extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(12),
         splashColor: WaultColors.glassHighlight,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 14.0),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
           child: Row(
             children: [
-              Icon(icon, color: color, size: 22.0),
-              const SizedBox(width: 14.0),
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
                     color: color,
-                    fontSize: 16.0,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
