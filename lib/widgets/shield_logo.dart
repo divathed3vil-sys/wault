@@ -1,4 +1,4 @@
-//import 'dart:math';
+// lib/widgets/shield_logo.dart
 
 import 'package:flutter/material.dart';
 import 'package:wault/theme/wault_colors.dart';
@@ -6,138 +6,118 @@ import 'package:wault/theme/wault_colors.dart';
 class ShieldLogo extends StatelessWidget {
   final double size;
   final double opacity;
+  final String? assetPath;
+  final bool useAssetIfAvailable;
 
-  const ShieldLogo({super.key, required this.size, this.opacity = 1.0});
+  const ShieldLogo({
+    super.key,
+    this.size = 64,
+    this.opacity = 1.0,
+    this.assetPath,
+    this.useAssetIfAvailable = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: opacity,
-      child: CustomPaint(
-        size: Size(size, size * 1.15),
-        painter: _ShieldLogoPainter(size: size),
-      ),
-    );
+    final effectiveAssetPath = assetPath ?? 'assets/images/wault_logo.png';
+
+    final child =
+        useAssetIfAvailable
+            ? Image.asset(
+              effectiveAssetPath,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              errorBuilder:
+                  (_, __, ___) => CustomPaint(
+                    size: Size.square(size),
+                    painter: _ShieldLogoPainter(),
+                  ),
+            )
+            : CustomPaint(
+              size: Size.square(size),
+              painter: _ShieldLogoPainter(),
+            );
+
+    return Opacity(opacity: opacity, child: child);
   }
 }
 
 class _ShieldLogoPainter extends CustomPainter {
-  final double size;
-
-  _ShieldLogoPainter({required this.size});
-
   @override
-  void paint(Canvas canvas, Size canvasSize) {
-    final width = canvasSize.width;
-    final height = canvasSize.height;
-    final centerX = width / 2;
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
 
-    final path = _buildShieldPath(width, height, centerX);
+    final fillPaint =
+        Paint()
+          ..shader = const LinearGradient(
+            colors: [WaultColors.primary, Color(0xB325D366)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(rect);
 
-    _drawGradientFill(canvas, path, width, height);
-    _drawInnerGlow(canvas, path, centerX, height);
-    _drawLetter(canvas, centerX, height);
-  }
+    final highlightPaint =
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              Colors.white.withOpacity(0.20),
+              Colors.white.withOpacity(0.0),
+            ],
+            center: const Alignment(-0.2, -0.3),
+            radius: 0.8,
+          ).createShader(rect);
 
-  Path _buildShieldPath(double width, double height, double centerX) {
+    final borderPaint =
+        Paint()
+          ..color = Colors.white.withOpacity(0.10)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = size.width * 0.025;
+
     final path = Path();
-
-    final topY = height * 0.02;
-    final shoulderY = height * 0.18;
-    final midY = height * 0.55;
-    final bottomY = height * 0.98;
-
-    final topInset = width * 0.15;
-    final shoulderWidth = width * 0.48;
-    final midWidth = width * 0.42;
-
-    path.moveTo(centerX, topY);
-    path.lineTo(centerX + topInset, topY);
-    path.lineTo(centerX + shoulderWidth, shoulderY);
-    path.lineTo(centerX + midWidth, midY);
-    path.lineTo(centerX, bottomY);
-    path.lineTo(centerX - midWidth, midY);
-    path.lineTo(centerX - shoulderWidth, shoulderY);
-    path.lineTo(centerX - topInset, topY);
+    path.moveTo(size.width * 0.50, size.height * 0.04);
+    path.lineTo(size.width * 0.86, size.height * 0.18);
+    path.lineTo(size.width * 0.86, size.height * 0.56);
+    path.quadraticBezierTo(
+      size.width * 0.86,
+      size.height * 0.84,
+      size.width * 0.50,
+      size.height * 0.96,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.14,
+      size.height * 0.84,
+      size.width * 0.14,
+      size.height * 0.56,
+    );
+    path.lineTo(size.width * 0.14, size.height * 0.18);
     path.close();
 
-    return path;
-  }
-
-  void _drawGradientFill(
-    Canvas canvas,
-    Path path,
-    double width,
-    double height,
-  ) {
-    final gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [WaultColors.primary, WaultColors.primary.withValues(alpha: 0.7)],
-    );
-
-    final rect = Rect.fromLTWH(0, 0, width, height);
-    final paint = Paint()
-      ..shader = gradient.createShader(rect)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawPath(path, paint);
-  }
-
-  void _drawInnerGlow(Canvas canvas, Path path, double centerX, double height) {
-    final glowCenter = Offset(centerX, height * 0.35);
-    final glowRadius = size * 0.5;
-
-    final gradient = RadialGradient(
-      center: Alignment.center,
-      radius: 1.0,
-      colors: [
-        Colors.white.withValues(alpha: 0.2),
-        Colors.white.withValues(alpha: 0.0),
-      ],
-    );
-
-    final rect = Rect.fromCircle(center: glowCenter, radius: glowRadius);
-    final paint = Paint()
-      ..shader = gradient.createShader(rect)
-      ..style = PaintingStyle.fill;
-
-    canvas.save();
-    canvas.clipPath(path);
-    canvas.drawCircle(glowCenter, glowRadius, paint);
-    canvas.restore();
-  }
-
-  void _drawLetter(Canvas canvas, double centerX, double height) {
-    final fontSize = size * 0.38;
-    final letterY = height * 0.42;
-
-    final textSpan = TextSpan(
-      text: 'W',
-      style: TextStyle(
-        color: WaultColors.textPrimary,
-        fontSize: fontSize,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -1.0,
-      ),
-    );
+    canvas.drawPath(path, fillPaint);
+    canvas.drawPath(path, highlightPaint);
+    canvas.drawPath(path, borderPaint);
 
     final textPainter = TextPainter(
-      text: textSpan,
+      text: TextSpan(
+        text: 'W',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size.width * 0.38,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1,
+        ),
+      ),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
+    )..layout();
+
+    final textOffset = Offset(
+      (size.width - textPainter.width) / 2,
+      (size.height - textPainter.height) / 2 - size.height * 0.02,
     );
 
-    textPainter.layout();
-
-    final textX = centerX - (textPainter.width / 2);
-    final textY = letterY - (textPainter.height / 2);
-
-    textPainter.paint(canvas, Offset(textX, textY));
+    textPainter.paint(canvas, textOffset);
   }
 
   @override
-  bool shouldRepaint(covariant _ShieldLogoPainter oldDelegate) {
-    return oldDelegate.size != size;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
