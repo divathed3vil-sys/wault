@@ -1,5 +1,3 @@
-implementation("androidx.appcompat:appcompat:1.6.1")
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -39,4 +37,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
