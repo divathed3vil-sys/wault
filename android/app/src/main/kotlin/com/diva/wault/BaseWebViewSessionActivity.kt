@@ -16,6 +16,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
 import android.webkit.URLUtil
@@ -30,6 +31,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 abstract class BaseWebViewSessionActivity : ComponentActivity() {
 
@@ -53,6 +56,7 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
 
     private lateinit var rootLayout: FrameLayout
     private lateinit var sessionContainer: LinearLayout
+    private lateinit var topBarContainer: FrameLayout
     private lateinit var topBar: LinearLayout
     private lateinit var webViewContainer: FrameLayout
     private lateinit var loadingOverlay: FrameLayout
@@ -65,6 +69,11 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
 
         accountId = intent.getStringExtra(EXTRA_ACCOUNT_ID).orEmpty()
         accountLabel = intent.getStringExtra(EXTRA_LABEL).orEmpty().ifBlank { "WAult" }
@@ -116,6 +125,29 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
 
         topBar = buildTopBar()
 
+        topBarContainer = FrameLayout(this).apply {
+            setBackgroundColor(Color.parseColor("#F20B141A"))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            addView(
+                topBar,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    dp(48)
+                ).apply {
+                    gravity = Gravity.BOTTOM
+                }
+            )
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(topBarContainer) { view, insets ->
+            val statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.setPadding(0, statusBarInsets.top, 0, 0)
+            insets
+        }
+
         webViewContainer = FrameLayout(this).apply {
             setBackgroundColor(Color.parseColor("#0B141A"))
             layoutParams = LinearLayout.LayoutParams(
@@ -134,7 +166,7 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         rootLayout.addView(sessionContainer)
         rootLayout.addView(errorOverlay)
 
-        sessionContainer.addView(topBar)
+        sessionContainer.addView(topBarContainer)
         sessionContainer.addView(webViewContainer)
 
         setContentView(rootLayout)
