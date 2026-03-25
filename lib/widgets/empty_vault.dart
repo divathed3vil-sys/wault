@@ -1,8 +1,8 @@
-// lib/widgets/empty_vault.dart
-
+// File: lib/widgets/empty_vault.dart
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_colors.dart';
-import 'package:wault/widgets/shield_logo.dart';
+
+import '../theme/wault_colors.dart';
+import 'shield_logo.dart';
 
 class EmptyVault extends StatelessWidget {
   final VoidCallback onAddAccount;
@@ -16,7 +16,7 @@ class EmptyVault extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             const ShieldLogo(size: 100, opacity: 0.30),
             const SizedBox(height: 32),
             const Text(

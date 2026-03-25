@@ -1,5 +1,4 @@
-// android/app/src/main/kotlin/com/diva/wault/MainActivity.kt
-
+// File: android/app/src/main/kotlin/com/diva/wault/MainActivity.kt
 package com.diva.wault
 
 import android.content.BroadcastReceiver
@@ -22,21 +21,21 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "com.diva.wault/engine"
+            WaultChannels.ENGINE
         ).setMethodCallHandler { call, result ->
             when (call.method) {
-                "openSession" -> handleOpenSession(call.arguments, result)
-                "closeSession" -> handleCloseSession(call.arguments, result)
-                "closeAllSessions" -> handleCloseAllSessions(result)
-                "getDeviceInfo" -> handleGetDeviceInfo(result)
-                "captureSnapshot" -> handleCaptureSnapshot(call.arguments, result)
+                WaultMethods.OPEN_SESSION -> handleOpenSession(call.arguments, result)
+                WaultMethods.CLOSE_SESSION -> handleCloseSession(call.arguments, result)
+                WaultMethods.CLOSE_ALL_SESSIONS -> handleCloseAllSessions(result)
+                WaultMethods.GET_DEVICE_INFO -> handleGetDeviceInfo(result)
+                WaultMethods.CAPTURE_SNAPSHOT -> handleCaptureSnapshot(call.arguments, result)
                 else -> result.notImplemented()
             }
         }
 
         EventChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "com.diva.wault/events"
+            WaultChannels.EVENTS
         ).setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                 eventSink = events
@@ -60,7 +59,11 @@ class MainActivity : FlutterActivity() {
         val accountId = args["accountId"] as? String
         val label = args["label"] as? String
         val accentColor = args["accentColor"] as? String
-        val processSlot = args["processSlot"] as? Int
+        val processSlot = when (val slot = args["processSlot"]) {
+            is Int -> slot
+            is Number -> slot.toInt()
+            else -> null
+        }
 
         if (accountId == null || label == null || accentColor == null || processSlot == null) {
             result.error("MISSING_ARGS", "Missing required arguments", null)
@@ -88,7 +91,7 @@ class MainActivity : FlutterActivity() {
 
         try {
             startActivity(intent)
-            result.success(true)
+            result.success(null)
         } catch (e: Exception) {
             result.error("LAUNCH_FAILED", e.message ?: "Unknown launch failure", null)
         }
@@ -97,28 +100,23 @@ class MainActivity : FlutterActivity() {
     private fun handleCloseSession(arguments: Any?, result: MethodChannel.Result) {
         val args = arguments as? Map<*, *>
         val accountId = args?.get("accountId") as? String
-        if (accountId == null) {
+
+        if (accountId.isNullOrBlank()) {
             result.error("MISSING_ARGS", "accountId is required", null)
             return
         }
 
-        sendBroadcast(
-            Intent(EventBroadcaster.ACTION).apply {
-                putExtra(EventBroadcaster.KEY_TYPE, EventBroadcaster.TYPE_CONTROL_CLOSE_SESSION)
-                putExtra(EventBroadcaster.KEY_ACCOUNT_ID, accountId)
-            }
+        EventBroadcaster.sendControlCloseSession(
+            context = applicationContext,
+            accountId = accountId
         )
 
-        result.success(true)
+        result.success(null)
     }
 
     private fun handleCloseAllSessions(result: MethodChannel.Result) {
-        sendBroadcast(
-            Intent(EventBroadcaster.ACTION).apply {
-                putExtra(EventBroadcaster.KEY_TYPE, EventBroadcaster.TYPE_CONTROL_CLOSE_ALL)
-            }
-        )
-        result.success(true)
+        EventBroadcaster.sendControlCloseAll(applicationContext)
+        result.success(null)
     }
 
     private fun handleGetDeviceInfo(result: MethodChannel.Result) {
@@ -138,10 +136,12 @@ class MainActivity : FlutterActivity() {
     private fun handleCaptureSnapshot(arguments: Any?, result: MethodChannel.Result) {
         val args = arguments as? Map<*, *>
         val accountId = args?.get("accountId") as? String
-        if (accountId == null) {
+
+        if (accountId.isNullOrBlank()) {
             result.error("MISSING_ARGS", "accountId is required", null)
             return
         }
+
         result.success(null)
     }
 
@@ -154,7 +154,6 @@ class MainActivity : FlutterActivity() {
                 if (intent.action != EventBroadcaster.ACTION) return
 
                 val type = intent.getStringExtra(EventBroadcaster.KEY_TYPE) ?: return
-                val accountId = intent.getStringExtra(EventBroadcaster.KEY_ACCOUNT_ID) ?: ""
 
                 if (type == EventBroadcaster.TYPE_CONTROL_CLOSE_SESSION ||
                     type == EventBroadcaster.TYPE_CONTROL_CLOSE_ALL
@@ -163,18 +162,27 @@ class MainActivity : FlutterActivity() {
                 }
 
                 val event = mutableMapOf<String, Any>(
-                    "type" to type,
-                    "accountId" to accountId
+                    "type" to type
                 )
+
+                intent.getStringExtra(EventBroadcaster.KEY_ACCOUNT_ID)?.let {
+                    event["accountId"] = it
+                }
 
                 if (intent.hasExtra(EventBroadcaster.KEY_COUNT)) {
                     event["count"] = intent.getIntExtra(EventBroadcaster.KEY_COUNT, 0)
                 }
+
                 if (intent.hasExtra(EventBroadcaster.KEY_STATE)) {
                     event["state"] = intent.getStringExtra(EventBroadcaster.KEY_STATE) ?: ""
                 }
+
                 if (intent.hasExtra(EventBroadcaster.KEY_MESSAGE)) {
                     event["message"] = intent.getStringExtra(EventBroadcaster.KEY_MESSAGE) ?: ""
+                }
+
+                if (intent.hasExtra(EventBroadcaster.KEY_DID_CRASH)) {
+                    event["didCrash"] = intent.getBooleanExtra(EventBroadcaster.KEY_DID_CRASH, false)
                 }
 
                 runOnUiThread {
@@ -207,4 +215,17 @@ class MainActivity : FlutterActivity() {
         unregisterEventReceiver()
         super.onDestroy()
     }
+}
+
+private object WaultChannels {
+    const val ENGINE = "com.diva.wault/engine"
+    const val EVENTS = "com.diva.wault/events"
+}
+
+private object WaultMethods {
+    const val OPEN_SESSION = "openSession"
+    const val CLOSE_SESSION = "closeSession"
+    const val CLOSE_ALL_SESSIONS = "closeAllSessions"
+    const val GET_DEVICE_INFO = "getDeviceInfo"
+    const val CAPTURE_SNAPSHOT = "captureSnapshot"
 }

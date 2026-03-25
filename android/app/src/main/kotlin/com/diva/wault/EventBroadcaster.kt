@@ -1,5 +1,4 @@
-// android/app/src/main/kotlin/com/diva/wault/EventBroadcaster.kt
-
+// File: android/app/src/main/kotlin/com/diva/wault/EventBroadcaster.kt
 package com.diva.wault
 
 import android.content.Context
@@ -14,6 +13,7 @@ object EventBroadcaster {
     const val KEY_COUNT = "count"
     const val KEY_STATE = "state"
     const val KEY_MESSAGE = "message"
+    const val KEY_DID_CRASH = "didCrash"
 
     const val TYPE_UNREAD_COUNT = "unreadCount"
     const val TYPE_QR_VISIBLE = "qrVisible"
@@ -50,11 +50,12 @@ object EventBroadcaster {
         )
     }
 
-    fun sendSessionCrashed(context: Context, accountId: String) {
+    fun sendSessionCrashed(context: Context, accountId: String, didCrash: Boolean) {
         send(
             context = context,
             type = TYPE_SESSION_CRASHED,
-            accountId = accountId
+            accountId = accountId,
+            didCrash = didCrash
         )
     }
 
@@ -76,13 +77,29 @@ object EventBroadcaster {
         )
     }
 
+    fun sendControlCloseSession(context: Context, accountId: String) {
+        send(
+            context = context,
+            type = TYPE_CONTROL_CLOSE_SESSION,
+            accountId = accountId
+        )
+    }
+
+    fun sendControlCloseAll(context: Context) {
+        send(
+            context = context,
+            type = TYPE_CONTROL_CLOSE_ALL
+        )
+    }
+
     private fun send(
         context: Context,
         type: String,
         accountId: String = "",
         count: Int? = null,
         state: String? = null,
-        message: String? = null
+        message: String? = null,
+        didCrash: Boolean? = null
     ) {
         val intent = Intent(ACTION).apply {
             putExtra(KEY_TYPE, type)
@@ -90,7 +107,9 @@ object EventBroadcaster {
             if (count != null) putExtra(KEY_COUNT, count)
             if (state != null) putExtra(KEY_STATE, state)
             if (message != null) putExtra(KEY_MESSAGE, message)
+            if (didCrash != null) putExtra(KEY_DID_CRASH, didCrash)
         }
+
         context.sendBroadcast(intent)
     }
 }

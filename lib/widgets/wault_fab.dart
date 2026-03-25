@@ -1,7 +1,9 @@
+// File: lib/widgets/wault_fab.dart
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_colors.dart';
+
+import '../theme/wault_colors.dart';
 
 class WaultFab extends StatefulWidget {
   final VoidCallback onPressed;
@@ -42,10 +44,10 @@ class _WaultFabState extends State<WaultFab>
       height: ringSize,
       child: Stack(
         alignment: Alignment.center,
-        children: [
+        children: <Widget>[
           AnimatedBuilder(
             animation: _controller,
-            builder: (context, child) {
+            builder: (BuildContext context, Widget? child) {
               return Transform.rotate(
                 angle: _controller.value * 2 * pi,
                 child: child,
@@ -57,21 +59,21 @@ class _WaultFabState extends State<WaultFab>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: SweepGradient(
-                  colors: [
+                  colors: <Color>[
                     WaultColors.primary.withOpacity(0.4),
                     WaultColors.primaryGlow,
                     WaultColors.primary.withOpacity(0.1),
                     WaultColors.primaryGlow,
                     WaultColors.primary.withOpacity(0.4),
                   ],
-                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                  stops: const <double>[0.0, 0.25, 0.5, 0.75, 1.0],
                 ),
               ),
               child: Center(
                 child: Container(
                   width: ringSize - 4,
                   height: ringSize - 4,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: WaultColors.background,
                   ),
@@ -89,7 +91,7 @@ class _WaultFabState extends State<WaultFab>
               customBorder: const CircleBorder(),
               splashColor: Colors.white24,
               highlightColor: Colors.white10,
-              child: SizedBox(
+              child: const SizedBox(
                 width: buttonSize,
                 height: buttonSize,
                 child: Icon(

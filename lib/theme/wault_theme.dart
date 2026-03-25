@@ -1,16 +1,18 @@
+// File: lib/theme/wault_theme.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:wault/theme/wault_colors.dart';
+
+import 'wault_colors.dart';
 
 class WaultTheme {
   WaultTheme._();
 
   static ThemeData get darkTheme {
-    final baseTextTheme = GoogleFonts.interTextTheme(
+    final TextTheme baseTextTheme = GoogleFonts.interTextTheme(
       ThemeData.dark().textTheme,
     );
 
-    final textTheme = baseTextTheme.copyWith(
+    final TextTheme textTheme = baseTextTheme.copyWith(
       displayLarge: baseTextTheme.displayLarge?.copyWith(
         color: WaultColors.textPrimary,
       ),
@@ -62,7 +64,7 @@ class WaultTheme {
       ),
     );
 
-    final colorScheme = ColorScheme.dark(
+    final ColorScheme colorScheme = ColorScheme.dark(
       brightness: Brightness.dark,
       primary: WaultColors.primary,
       onPrimary: WaultColors.background,
@@ -93,19 +95,19 @@ class WaultTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
-          side: BorderSide(color: WaultColors.glassBorder, width: 1.0),
+          side: const BorderSide(color: WaultColors.glassBorder, width: 1.0),
         ),
         margin: EdgeInsets.zero,
       ),
-      bottomSheetTheme: BottomSheetThemeData(
+      bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: WaultColors.surface,
         modalBackgroundColor: WaultColors.surface,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         ),
         modalBarrierColor: Colors.black54,
       ),
-      dividerTheme: DividerThemeData(
+      dividerTheme: const DividerThemeData(
         color: WaultColors.divider,
         thickness: 0.5,
         space: 0,
@@ -123,23 +125,23 @@ class WaultTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: WaultColors.glassBorder),
+          borderSide: const BorderSide(color: WaultColors.glassBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: WaultColors.glassBorder),
+          borderSide: const BorderSide(color: WaultColors.glassBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: WaultColors.primary, width: 1.5),
+          borderSide: const BorderSide(color: WaultColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: WaultColors.error),
+          borderSide: const BorderSide(color: WaultColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: WaultColors.error, width: 1.5),
+          borderSide: const BorderSide(color: WaultColors.error, width: 1.5),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(

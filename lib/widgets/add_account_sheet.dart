@@ -1,8 +1,8 @@
-// lib/widgets/add_account_sheet.dart
-
+// File: lib/widgets/add_account_sheet.dart
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_colors.dart';
-import 'package:wault/widgets/liquid_glass_card.dart';
+
+import '../theme/wault_colors.dart';
+import 'liquid_glass_card.dart';
 
 class AddAccountSheet extends StatefulWidget {
   final List<String> accentPalette;
@@ -39,7 +39,8 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
   }
 
   void _handleCreate() {
-    final trimmed = _nameController.text.trim();
+    final String trimmed = _nameController.text.trim();
+
     if (trimmed.isEmpty) {
       setState(() {
         _errorText = 'Please enter an account name';
@@ -56,7 +57,7 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
 
   Color _parseHexColor(String hex) {
     try {
-      final cleaned = hex.replaceFirst('#', '');
+      final String cleaned = hex.replaceFirst('#', '');
       if (cleaned.length == 6) {
         return Color(int.parse('FF$cleaned', radix: 16));
       }
@@ -69,17 +70,19 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
         top: 8,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: bottomInset + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           _buildDragHandle(),
           const SizedBox(height: 16),
           _buildTitle(),
@@ -156,41 +159,51 @@ class _AddAccountSheetState extends State<AddAccountSheet> {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: widget.accentPalette.map((hex) {
-        final color = _parseHexColor(hex);
-        final isSelected = hex == widget.initialSelectedColorHex;
+      children:
+          widget.accentPalette.map((String hex) {
+            final Color color = _parseHexColor(hex);
+            final bool isSelected = hex == widget.initialSelectedColorHex;
 
-        return GestureDetector(
-          onTap: () => widget.onColorSelected(hex),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-              border: isSelected
-                  ? Border.all(color: WaultColors.textPrimary, width: 2.5)
-                  : Border.all(color: color.withOpacity(0.4), width: 1.5),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: color.withOpacity(0.4),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: isSelected
-                ? const Icon(
-                    Icons.check_rounded,
-                    color: WaultColors.background,
-                    size: 20,
-                  )
-                : null,
-          ),
-        );
-      }).toList(),
+            return GestureDetector(
+              onTap: () => widget.onColorSelected(hex),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                  border:
+                      isSelected
+                          ? Border.all(
+                            color: WaultColors.textPrimary,
+                            width: 2.5,
+                          )
+                          : Border.all(
+                            color: color.withOpacity(0.4),
+                            width: 1.5,
+                          ),
+                  boxShadow:
+                      isSelected
+                          ? <BoxShadow>[
+                            BoxShadow(
+                              color: color.withOpacity(0.4),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                          : null,
+                ),
+                child:
+                    isSelected
+                        ? const Icon(
+                          Icons.check_rounded,
+                          color: WaultColors.background,
+                          size: 20,
+                        )
+                        : null,
+              ),
+            );
+          }).toList(),
     );
   }
 

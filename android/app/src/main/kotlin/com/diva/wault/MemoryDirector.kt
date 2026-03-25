@@ -1,5 +1,4 @@
-// android/app/src/main/kotlin/com/diva/wault/MemoryDirector.kt
-
+// File: android/app/src/main/kotlin/com/diva/wault/MemoryDirector.kt
 package com.diva.wault
 
 object MemoryDirector {
@@ -19,18 +18,21 @@ object MemoryDirector {
                 monitorIntervalSeconds = 2,
                 freezeToColdOnLowMemory = true
             )
+
             DeviceProfiler.Tier.CAPABLE -> MemoryPolicy(
                 maxAccounts = 5,
                 maxWarm = 2,
                 monitorIntervalSeconds = 3,
                 freezeToColdOnLowMemory = true
             )
+
             DeviceProfiler.Tier.POWERFUL -> MemoryPolicy(
                 maxAccounts = 5,
                 maxWarm = 3,
                 monitorIntervalSeconds = 4,
                 freezeToColdOnLowMemory = true
             )
+
             DeviceProfiler.Tier.BEAST -> MemoryPolicy(
                 maxAccounts = 5,
                 maxWarm = 4,

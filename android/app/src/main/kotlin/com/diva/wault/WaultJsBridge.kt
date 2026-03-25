@@ -1,37 +1,45 @@
-// android/app/src/main/kotlin/com/diva/wault/WaultJsBridge.kt
-
+// File: android/app/src/main/kotlin/com/diva/wault/WaultJsBridge.kt
 package com.diva.wault
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
 
 class WaultJsBridge(
-    private val accountId: String,
-    private val onUnreadCountChanged: ((String, Int) -> Unit)? = null,
-    private val onQrVisible: ((String) -> Unit)? = null,
-    private val onLoggedInState: ((String) -> Unit)? = null
+    private val applicationContext: Context,
+    private val accountId: String
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     @JavascriptInterface
     fun onUnreadCount(count: Int) {
         mainHandler.post {
-            onUnreadCountChanged?.invoke(accountId, count)
+            EventBroadcaster.sendUnreadCount(
+                context = applicationContext,
+                accountId = accountId,
+                count = count
+            )
         }
     }
 
     @JavascriptInterface
     fun onQRVisible() {
         mainHandler.post {
-            onQrVisible?.invoke(accountId)
+            EventBroadcaster.sendQrVisible(
+                context = applicationContext,
+                accountId = accountId
+            )
         }
     }
 
     @JavascriptInterface
     fun onLoggedIn() {
         mainHandler.post {
-            onLoggedInState?.invoke(accountId)
+            EventBroadcaster.sendLoggedIn(
+                context = applicationContext,
+                accountId = accountId
+            )
         }
     }
 }

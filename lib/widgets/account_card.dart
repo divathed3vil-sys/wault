@@ -1,10 +1,10 @@
-// lib/widgets/account_card.dart
-
+// File: lib/widgets/account_card.dart
 import 'package:flutter/material.dart';
-import 'package:wault/models/account.dart';
-import 'package:wault/theme/wault_colors.dart';
-import 'package:wault/utils/time_utils.dart';
-import 'package:wault/widgets/liquid_glass_card.dart';
+
+import '../models/account.dart';
+import '../theme/wault_colors.dart';
+import '../utils/time_utils.dart';
+import 'liquid_glass_card.dart';
 
 class AccountCard extends StatelessWidget {
   final Account account;
@@ -20,7 +20,7 @@ class AccountCard extends StatelessWidget {
 
   Color _parseHexColor(String hex) {
     try {
-      final cleaned = hex.replaceFirst('#', '');
+      final String cleaned = hex.replaceFirst('#', '');
       if (cleaned.length == 6) {
         return Color(int.parse('FF$cleaned', radix: 16));
       }
@@ -43,6 +43,18 @@ class AccountCard extends StatelessWidget {
     }
   }
 
+  Color _stateTextColor() {
+    switch (account.state) {
+      case 'ACTIVE':
+        return WaultColors.activeBlue;
+      case 'ERROR':
+        return WaultColors.error;
+      case 'COLD':
+      default:
+        return WaultColors.textSecondary;
+    }
+  }
+
   String _stateLabel() {
     switch (account.state) {
       case 'ACTIVE':
@@ -56,18 +68,19 @@ class AccountCard extends StatelessWidget {
   }
 
   String _unreadText(int count) {
-    if (count > 99) return '99+';
+    if (count > 99) {
+      return '99+';
+    }
     return '$count';
   }
 
   @override
   Widget build(BuildContext context) {
-    final accent = _parseHexColor(account.accentColorHex);
-    final initial = account.label.isNotEmpty
-        ? account.label[0].toUpperCase()
-        : '?';
-    final hasUnread = account.unreadCount > 0;
-    final hasLastActive = account.lastActiveAt > 0;
+    final Color accent = _parseHexColor(account.accentColorHex);
+    final String initial =
+        account.label.isNotEmpty ? account.label[0].toUpperCase() : '?';
+    final bool hasUnread = account.unreadCount > 0;
+    final bool hasLastActive = account.lastActiveAt > 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -75,19 +88,20 @@ class AccountCard extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         accentColor: accent,
-        showGlow: hasUnread,
+        showGlow: hasUnread || account.state == 'ACTIVE',
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-            children: [
+            children: <Widget>[
               Row(
-                children: [
+                children: <Widget>[
                   Stack(
                     clipBehavior: Clip.none,
-                    children: [
+                    children: <Widget>[
                       Container(
                         width: 52,
                         height: 52,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: accent.withOpacity(0.15),
@@ -96,7 +110,6 @@ class AccountCard extends StatelessWidget {
                             width: 1.5,
                           ),
                         ),
-                        alignment: Alignment.center,
                         child: Text(
                           initial,
                           style: TextStyle(
@@ -128,7 +141,7 @@ class AccountCard extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Text(
                           account.label,
                           maxLines: 1,
@@ -139,16 +152,13 @@ class AccountCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
                           _stateLabel(),
                           style: TextStyle(
-                            color: account.state == 'ERROR'
-                                ? WaultColors.error
-                                : account.state == 'ACTIVE'
-                                ? WaultColors.activeBlue
-                                : WaultColors.textSecondary,
+                            color: _stateTextColor(),
                             fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -156,7 +166,8 @@ class AccountCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   if (hasUnread)
-                    Container(
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 3,
@@ -182,7 +193,7 @@ class AccountCard extends StatelessWidget {
                     ),
                 ],
               ),
-              if (hasLastActive) ...[
+              if (hasLastActive) ...<Widget>[
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,

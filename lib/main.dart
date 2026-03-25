@@ -1,15 +1,19 @@
-// lib/main.dart
-
+// File: lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:wault/screens/splash_screen.dart';
-import 'package:wault/screens/vault_screen.dart';
-import 'package:wault/theme/wault_theme.dart';
 
-void main() {
+import 'screens/splash_screen.dart';
+import 'screens/vault_screen.dart';
+import 'services/engine_service.dart';
+import 'theme/wault_theme.dart';
+import 'utils/constants.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+  ]);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -20,6 +24,8 @@ void main() {
     ),
   );
 
+  await EngineService.instance.initialize();
+
   runApp(const WaultApp());
 }
 
@@ -29,7 +35,7 @@ class WaultApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'WAult',
+      title: WaultConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: WaultTheme.darkTheme,
       home: const AppNavigator(),

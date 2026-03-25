@@ -1,3 +1,4 @@
+// File: lib/utils/constants.dart
 class WaultConstants {
   WaultConstants._();
 

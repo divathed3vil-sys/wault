@@ -1,7 +1,7 @@
-// lib/widgets/account_options_sheet.dart
-
+// File: lib/widgets/account_options_sheet.dart
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_colors.dart';
+
+import '../theme/wault_colors.dart';
 
 class AccountOptionsSheet extends StatelessWidget {
   final String accountLabel;
@@ -24,12 +24,12 @@ class AccountOptionsSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           _buildDragHandle(),
           const SizedBox(height: 16),
           _buildHeader(),
           const SizedBox(height: 12),
-          Divider(color: WaultColors.glassBorder, height: 1),
+          const Divider(color: WaultColors.glassBorder, height: 1),
           const SizedBox(height: 4),
           _buildAction(
             icon: Icons.edit_outlined,
@@ -43,7 +43,7 @@ class AccountOptionsSheet extends StatelessWidget {
             color: WaultColors.textPrimary,
             onTap: onChangeColor,
           ),
-          Divider(color: WaultColors.glassBorder, height: 1),
+          const Divider(color: WaultColors.glassBorder, height: 1),
           _buildAction(
             icon: Icons.delete_outline_rounded,
             label: 'Delete',
@@ -71,13 +71,13 @@ class AccountOptionsSheet extends StatelessWidget {
   Widget _buildHeader() {
     return Text(
       accountLabel,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: const TextStyle(
         color: WaultColors.textPrimary,
         fontSize: 18,
         fontWeight: FontWeight.w600,
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
   }
 
@@ -96,7 +96,7 @@ class AccountOptionsSheet extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
           child: Row(
-            children: [
+            children: <Widget>[
               Icon(icon, color: color, size: 22),
               const SizedBox(width: 14),
               Expanded(

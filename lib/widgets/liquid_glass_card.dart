@@ -1,5 +1,7 @@
+// File: lib/widgets/liquid_glass_card.dart
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_colors.dart';
+
+import '../theme/wault_colors.dart';
 
 class LiquidGlassCard extends StatelessWidget {
   final Widget child;
@@ -25,22 +27,22 @@ class LiquidGlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasInteraction = onTap != null || onLongPress != null;
-    final effectiveRadius = BorderRadius.circular(borderRadius);
+    final bool hasInteraction = onTap != null || onLongPress != null;
+    final BorderRadius effectiveRadius = BorderRadius.circular(borderRadius);
 
     Widget cardContent = Container(
       decoration: BoxDecoration(
         borderRadius: effectiveRadius,
         color: WaultColors.surface,
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
+          colors: <Color>[
             WaultColors.glassHighlight,
             WaultColors.glassWhite,
             Colors.transparent,
           ],
-          stops: const [0.0, 0.3, 1.0],
+          stops: <double>[0.0, 0.3, 1.0],
         ),
         border: Border.all(color: WaultColors.glassBorder, width: 1.0),
         boxShadow: _buildShadows(),
@@ -48,7 +50,7 @@ class LiquidGlassCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: effectiveRadius,
-          color: WaultColors.surface.withValues(alpha: 0.85),
+          color: WaultColors.surface.withOpacity(0.85),
         ),
         padding: padding,
         child: child,
@@ -78,9 +80,9 @@ class LiquidGlassCard extends StatelessWidget {
   }
 
   List<BoxShadow> _buildShadows() {
-    final shadows = <BoxShadow>[
+    final List<BoxShadow> shadows = <BoxShadow>[
       BoxShadow(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: Colors.black.withOpacity(0.30),
         blurRadius: 8.0,
         offset: const Offset(0, 4),
       ),
@@ -89,7 +91,7 @@ class LiquidGlassCard extends StatelessWidget {
     if (showGlow && accentColor != null) {
       shadows.add(
         BoxShadow(
-          color: accentColor!.withValues(alpha: 0.25),
+          color: accentColor!.withOpacity(0.25),
           blurRadius: 16.0,
           spreadRadius: 1.0,
           offset: Offset.zero,

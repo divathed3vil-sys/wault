@@ -1,3 +1,4 @@
+// File: lib/utils/time_utils.dart
 class TimeUtils {
   TimeUtils._();
 
@@ -6,17 +7,17 @@ class TimeUtils {
       return 'never';
     }
 
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final diffMs = now - timestampMs;
+    final int now = DateTime.now().millisecondsSinceEpoch;
+    final int diffMs = now - timestampMs;
 
     if (diffMs < 0) {
       return 'just now';
     }
 
-    final seconds = diffMs ~/ 1000;
-    final minutes = seconds ~/ 60;
-    final hours = minutes ~/ 60;
-    final days = hours ~/ 24;
+    final int seconds = diffMs ~/ 1000;
+    final int minutes = seconds ~/ 60;
+    final int hours = minutes ~/ 60;
+    final int days = hours ~/ 24;
 
     if (seconds < 60) {
       return 'just now';
@@ -44,7 +45,7 @@ class TimeUtils {
       return '$days days ago';
     }
 
-    final months = days ~/ 30;
+    final int months = days ~/ 30;
     if (months == 1) {
       return '1 month ago';
     }
@@ -53,7 +54,7 @@ class TimeUtils {
       return '$months months ago';
     }
 
-    final years = months ~/ 12;
+    final int years = months ~/ 12;
     if (years == 1) {
       return '1 year ago';
     }

@@ -1,5 +1,4 @@
-// android/app/src/main/kotlin/com/diva/wault/DeviceProfiler.kt
-
+// File: android/app/src/main/kotlin/com/diva/wault/DeviceProfiler.kt
 package com.diva.wault
 
 import android.app.ActivityManager

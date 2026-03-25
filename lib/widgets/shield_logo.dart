@@ -1,7 +1,7 @@
-// lib/widgets/shield_logo.dart
-
+// File: lib/widgets/shield_logo.dart
 import 'package:flutter/material.dart';
-import 'package:wault/theme/wault_colors.dart';
+
+import '../theme/wault_colors.dart';
 
 class ShieldLogo extends StatelessWidget {
   final double size;
@@ -19,20 +19,22 @@ class ShieldLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveAssetPath = assetPath ?? 'assets/images/wault_logo.png';
+    final String effectiveAssetPath =
+        assetPath ?? 'assets/images/wault_logo.png';
 
-    final child =
+    final Widget child =
         useAssetIfAvailable
             ? Image.asset(
               effectiveAssetPath,
               width: size,
               height: size,
               fit: BoxFit.contain,
-              errorBuilder:
-                  (_, __, ___) => CustomPaint(
-                    size: Size.square(size),
-                    painter: _ShieldLogoPainter(),
-                  ),
+              errorBuilder: (_, __, ___) {
+                return CustomPaint(
+                  size: Size.square(size),
+                  painter: _ShieldLogoPainter(),
+                );
+              },
             )
             : CustomPaint(
               size: Size.square(size),
@@ -46,20 +48,20 @@ class ShieldLogo extends StatelessWidget {
 class _ShieldLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
+    final Rect rect = Offset.zero & size;
 
-    final fillPaint =
+    final Paint fillPaint =
         Paint()
           ..shader = const LinearGradient(
-            colors: [WaultColors.primary, Color(0xB325D366)],
+            colors: <Color>[WaultColors.primary, Color(0xB325D366)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ).createShader(rect);
 
-    final highlightPaint =
+    final Paint highlightPaint =
         Paint()
           ..shader = RadialGradient(
-            colors: [
+            colors: <Color>[
               Colors.white.withOpacity(0.20),
               Colors.white.withOpacity(0.0),
             ],
@@ -67,36 +69,37 @@ class _ShieldLogoPainter extends CustomPainter {
             radius: 0.8,
           ).createShader(rect);
 
-    final borderPaint =
+    final Paint borderPaint =
         Paint()
           ..color = Colors.white.withOpacity(0.10)
           ..style = PaintingStyle.stroke
           ..strokeWidth = size.width * 0.025;
 
-    final path = Path();
-    path.moveTo(size.width * 0.50, size.height * 0.04);
-    path.lineTo(size.width * 0.86, size.height * 0.18);
-    path.lineTo(size.width * 0.86, size.height * 0.56);
-    path.quadraticBezierTo(
-      size.width * 0.86,
-      size.height * 0.84,
-      size.width * 0.50,
-      size.height * 0.96,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.14,
-      size.height * 0.84,
-      size.width * 0.14,
-      size.height * 0.56,
-    );
-    path.lineTo(size.width * 0.14, size.height * 0.18);
-    path.close();
+    final Path path =
+        Path()
+          ..moveTo(size.width * 0.50, size.height * 0.04)
+          ..lineTo(size.width * 0.86, size.height * 0.18)
+          ..lineTo(size.width * 0.86, size.height * 0.56)
+          ..quadraticBezierTo(
+            size.width * 0.86,
+            size.height * 0.84,
+            size.width * 0.50,
+            size.height * 0.96,
+          )
+          ..quadraticBezierTo(
+            size.width * 0.14,
+            size.height * 0.84,
+            size.width * 0.14,
+            size.height * 0.56,
+          )
+          ..lineTo(size.width * 0.14, size.height * 0.18)
+          ..close();
 
     canvas.drawPath(path, fillPaint);
     canvas.drawPath(path, highlightPaint);
     canvas.drawPath(path, borderPaint);
 
-    final textPainter = TextPainter(
+    final TextPainter textPainter = TextPainter(
       text: TextSpan(
         text: 'W',
         style: TextStyle(
@@ -110,7 +113,7 @@ class _ShieldLogoPainter extends CustomPainter {
       textAlign: TextAlign.center,
     )..layout();
 
-    final textOffset = Offset(
+    final Offset textOffset = Offset(
       (size.width - textPainter.width) / 2,
       (size.height - textPainter.height) / 2 - size.height * 0.02,
     );
@@ -119,5 +122,7 @@ class _ShieldLogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
 }

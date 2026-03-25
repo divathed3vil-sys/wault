@@ -1,5 +1,4 @@
-// lib/models/account.dart
-
+// File: lib/models/account.dart
 class Account {
   final String id;
   final String label;
@@ -23,19 +22,19 @@ class Account {
 
   factory Account.fromJson(Map<String, dynamic> json) {
     return Account(
-      id: json['id'] as String? ?? '',
-      label: json['label'] as String? ?? '',
-      accentColorHex: json['accentColorHex'] as String? ?? '#25D366',
-      processSlot: json['processSlot'] as int? ?? 0,
-      createdAt: json['createdAt'] as int? ?? 0,
-      lastActiveAt: json['lastActiveAt'] as int? ?? 0,
-      state: json['state'] as String? ?? 'COLD',
-      unreadCount: json['unreadCount'] as int? ?? 0,
+      id: (json['id'] ?? '').toString(),
+      label: (json['label'] ?? '').toString(),
+      accentColorHex: (json['accentColorHex'] ?? '#25D366').toString(),
+      processSlot: _asInt(json['processSlot']),
+      createdAt: _asInt(json['createdAt']),
+      lastActiveAt: _asInt(json['lastActiveAt']),
+      state: (json['state'] ?? 'COLD').toString(),
+      unreadCount: _asInt(json['unreadCount']),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'id': id,
       'label': label,
       'accentColorHex': accentColorHex,
@@ -67,5 +66,12 @@ class Account {
       state: state ?? this.state,
       unreadCount: unreadCount ?? this.unreadCount,
     );
+  }
+
+  static int _asInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
