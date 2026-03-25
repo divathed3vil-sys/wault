@@ -28,10 +28,10 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
 
-abstract class BaseWebViewSessionActivity : AppCompatActivity() {
+abstract class BaseWebViewSessionActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_ACCOUNT_ID = "accountId"
