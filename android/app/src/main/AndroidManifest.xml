@@ -34,6 +34,7 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
+            android:theme="@style/NormalTheme"
             android:process=":wv0" />
 
         <activity
@@ -41,6 +42,7 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
+            android:theme="@style/NormalTheme"
             android:process=":wv1" />
 
         <activity
@@ -48,6 +50,7 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
+            android:theme="@style/NormalTheme"
             android:process=":wv2" />
 
         <activity
@@ -55,6 +58,7 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
+            android:theme="@style/NormalTheme"
             android:process=":wv3" />
 
         <activity
@@ -62,6 +66,7 @@
             android:exported="false"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
+            android:theme="@style/NormalTheme"
             android:process=":wv4" />
 
         <meta-data
