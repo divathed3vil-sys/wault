@@ -197,7 +197,7 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
                     text = accountLabel
                     setTextColor(Color.parseColor("#E6FFFFFF"))
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-                    setTypeface(typeface, Typeface.SEMI_BOLD)
+                    setTypeface(typeface, Typeface.BOLD)
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                 }
@@ -273,7 +273,7 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
                 setTextColor(Color.WHITE)
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-                setTypeface(typeface, Typeface.SEMI_BOLD)
+                setTypeface(typeface, Typeface.BOLD)
                 setPadding(dp(20), dp(12), dp(20), dp(12))
                 background = android.graphics.drawable.GradientDrawable().apply {
                     shape = android.graphics.drawable.GradientDrawable.RECTANGLE
@@ -290,7 +290,7 @@ abstract class BaseWebViewSessionActivity : AppCompatActivity() {
                 gravity = Gravity.CENTER
                 setTextColor(Color.parseColor("#E6FFFFFF"))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-                setTypeface(typeface, Typeface.SEMI_BOLD)
+                setTypeface(typeface, Typeface.BOLD)
                 setPadding(dp(20), dp(12), dp(20), dp(12))
                 background = android.graphics.drawable.GradientDrawable().apply {
                     shape = android.graphics.drawable.GradientDrawable.RECTANGLE
