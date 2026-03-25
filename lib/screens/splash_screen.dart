@@ -159,7 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                             ),
                             const ShieldLogo(
-                              size: 88,
+                              size: 90,
                               useAssetIfAvailable: true,
                             ),
                           ],
@@ -186,7 +186,7 @@ class _SplashScreenState extends State<SplashScreen>
                         'a project by DIVA',
                         style: TextStyle(
                           color: WaultColors.textSecondary,
-                          fontSize: 13,
+                          fontSize: 15,
                           letterSpacing: 1,
                         ),
                       ),
