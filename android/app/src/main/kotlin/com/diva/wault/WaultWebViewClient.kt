@@ -65,10 +65,10 @@ class WaultWebViewClient(
     override fun onPageFinished(view: WebView, url: String?) {
         super.onPageFinished(view, url)
         injectViewportMeta(view)
-        injectWaultNativeShell(view)
+        injectWaultMobileShell(view)
+        injectWaultPanelController(view)
         injectFocusedSessionBehavior(view)
         injectStateObservers(view)
-        injectQrAwareLayoutLogic(view)
         activity.onPageReady()
     }
 
@@ -98,33 +98,26 @@ class WaultWebViewClient(
                         vp.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
                         if (document.head) document.head.appendChild(vp);
                     }
-                    var cs = document.querySelector('meta[name="color-scheme"]');
-                    if (!cs) {
-                        cs = document.createElement('meta');
-                        cs.name = 'color-scheme';
-                        cs.content = 'dark';
-                        if (document.head) document.head.appendChild(cs);
-                    }
                 } catch(e) {}
             })();
         """.trimIndent()
         webView.evaluateJavascript(js, null)
     }
 
-    private fun injectWaultNativeShell(webView: WebView) {
+    private fun injectWaultMobileShell(webView: WebView) {
         val safeAccent = accentColorHex.ifBlank { "#25D366" }
 
         val js = """
             (function() {
                 try {
-                    var existing = document.getElementById('wault-native-feel');
+                    var existing = document.getElementById('wault-mobile-shell');
                     if (existing) existing.remove();
 
                     var style = document.createElement('style');
-                    style.id = 'wault-native-feel';
+                    style.id = 'wault-mobile-shell';
                     style.textContent = `
 
-                        /* ===== ROOT VARIABLES ===== */
+                        /* ========== THEME VARIABLES ========== */
                         :root {
                             --wault-bg: #0b141a;
                             --wault-surface: #111b21;
@@ -135,7 +128,8 @@ class WaultWebViewClient(
                             --wault-accent: ${safeAccent};
                         }
 
-                        /* ===== BASE RESET ===== */
+
+                        /* ========== BASE RESET ========== */
                         html, body {
                             background: var(--wault-bg) !important;
                             color: var(--wault-text) !important;
@@ -145,17 +139,24 @@ class WaultWebViewClient(
                             overflow-x: hidden !important;
                             -webkit-tap-highlight-color: transparent !important;
                             -webkit-overflow-scrolling: touch !important;
-                            scroll-behavior: smooth !important;
                         }
 
                         body, div, span, button, a, input, textarea {
                             -webkit-tap-highlight-color: transparent !important;
                         }
 
-                        /* ===== SCROLLBAR ===== */
+                        #app {
+                            background: var(--wault-bg) !important;
+                            width: 100% !important;
+                            max-width: 100vw !important;
+                            overflow-x: hidden !important;
+                        }
+
+
+                        /* ========== SCROLLBAR ========== */
                         * {
                             scrollbar-width: thin !important;
-                            scrollbar-color: rgba(255,255,255,0.10) transparent !important;
+                            scrollbar-color: rgba(255,255,255,0.08) transparent !important;
                         }
                         *::-webkit-scrollbar {
                             width: 3px !important;
@@ -165,11 +166,12 @@ class WaultWebViewClient(
                             background: transparent !important;
                         }
                         *::-webkit-scrollbar-thumb {
-                            background: rgba(255,255,255,0.10) !important;
+                            background: rgba(255,255,255,0.08) !important;
                             border-radius: 999px !important;
                         }
 
-                        /* ===== USER SELECTION ===== */
+
+                        /* ========== USER SELECTION ========== */
                         body:not([contenteditable="true"]),
                         body *:not(input):not(textarea):not([contenteditable="true"]) {
                             -webkit-user-select: none !important;
@@ -180,15 +182,8 @@ class WaultWebViewClient(
                             user-select: text !important;
                         }
 
-                        /* ===== APP CONTAINER ===== */
-                        #app {
-                            background: var(--wault-bg) !important;
-                            width: 100% !important;
-                            max-width: 100vw !important;
-                            overflow-x: hidden !important;
-                        }
 
-                        /* ===== WAULT ACCENT LINE ===== */
+                        /* ========== WAULT ACCENT LINE ========== */
                         #app::before {
                             content: "";
                             position: fixed;
@@ -196,42 +191,68 @@ class WaultWebViewClient(
                             left: 0;
                             right: 0;
                             height: 2px;
-                            background: linear-gradient(
-                                90deg,
-                                transparent 0%,
-                                var(--wault-accent) 50%,
-                                transparent 100%
-                            );
+                            background: linear-gradient(90deg, transparent 0%, var(--wault-accent) 50%, transparent 100%);
                             z-index: 2147483646;
                             pointer-events: none;
-                            opacity: 0.65;
+                            opacity: 0.6;
                         }
 
-                        /* ===== FULL WIDTH MOBILE PANELS ===== */
-                        #app > div,
-                        #pane-side,
-                        #main,
-                        #side {
-                            max-width: 100% !important;
+
+                        /* ========== PANEL SYSTEM ========== */
+
+                        /* Both panels always full width */
+                        #pane-side {
                             width: 100% !important;
+                            min-width: 100% !important;
+                            max-width: 100% !important;
+                            flex: 1 1 100% !important;
                         }
 
-                        /* ===== CHAT LIST ===== */
+                        #main {
+                            width: 100% !important;
+                            min-width: 100% !important;
+                            max-width: 100% !important;
+                            flex: 1 1 100% !important;
+                        }
+
+                        #side {
+                            width: 100% !important;
+                            min-width: 100% !important;
+                            max-width: 100% !important;
+                        }
+
+                        /* DEFAULT: Chat list visible, conversation hidden */
+                        body:not(.wault-chat-open) #main {
+                            display: none !important;
+                        }
+
+                        /* CHAT OPEN: Conversation visible, chat list hidden */
+                        body.wault-chat-open #pane-side {
+                            display: none !important;
+                        }
+
+                        body.wault-chat-open #main {
+                            display: flex !important;
+                            flex-direction: column !important;
+                        }
+
+
+                        /* ========== CHAT LIST ========== */
                         [data-testid="chat-list"] {
                             background: var(--wault-bg) !important;
                         }
 
                         [data-testid="cell-frame-container"] {
-                            border-radius: 14px !important;
+                            border-radius: 12px !important;
                             margin: 1px 4px !important;
-                            transition: background 0.12s ease !important;
                         }
 
                         [data-testid="cell-frame-container"]:active {
-                            background: rgba(255,255,255,0.05) !important;
+                            background: rgba(255,255,255,0.04) !important;
                         }
 
-                        /* ===== HEADERS ===== */
+
+                        /* ========== HEADERS ========== */
                         [data-testid="chat-list-header"],
                         [data-testid="chat-header"],
                         header {
@@ -241,16 +262,19 @@ class WaultWebViewClient(
                             backdrop-filter: none !important;
                         }
 
-                        /* ===== CONVERSATION AREA ===== */
+
+                        /* ========== CONVERSATION ========== */
                         [data-testid="conversation-panel-wrapper"],
                         #main {
                             background: var(--wault-bg) !important;
                         }
 
-                        /* ===== FOOTER / COMPOSE ===== */
+
+                        /* ========== FOOTER / COMPOSE ========== */
                         footer {
                             background: var(--wault-surface) !important;
                             border-top: 1px solid rgba(255,255,255,0.04) !important;
+                            width: 100% !important;
                         }
 
                         [data-testid="conversation-compose-box-input"] {
@@ -262,12 +286,13 @@ class WaultWebViewClient(
                             color: var(--wault-text-secondary) !important;
                         }
 
-                        /* ===== MESSAGE BUBBLES ===== */
+
+                        /* ========== MESSAGE BUBBLES ========== */
                         [data-testid="msg-container"] .message-in,
                         [data-testid="msg-container"] .message-out {
                             border-radius: 14px !important;
                             box-shadow: none !important;
-                            max-width: 85% !important;
+                            max-width: 88% !important;
                         }
 
                         [data-testid="msg-container"] .message-in {
@@ -286,16 +311,18 @@ class WaultWebViewClient(
                             color: rgba(255,255,255,0.55) !important;
                         }
 
-                        /* ===== SEARCH ===== */
+
+                        /* ========== SEARCH ========== */
                         [data-testid="chat-list-search"],
                         [data-testid="search"] {
                             background: rgba(255,255,255,0.06) !important;
                             border-radius: 20px !important;
-                            border: 1px solid rgba(255,255,255,0.05) !important;
+                            border: 1px solid rgba(255,255,255,0.04) !important;
                             box-shadow: none !important;
                         }
 
-                        /* ===== UNREAD BADGES ===== */
+
+                        /* ========== UNREAD BADGES ========== */
                         [data-testid="unread-count"],
                         [data-testid="icon-unread-count"] {
                             border-radius: 999px !important;
@@ -303,19 +330,19 @@ class WaultWebViewClient(
                             font-weight: 600 !important;
                         }
 
-                        /* ===== ACTION BUTTONS (touch-friendly) ===== */
+
+                        /* ========== TOUCH-FRIENDLY ACTION BUTTONS ========== */
                         [data-testid="send-btn"],
                         [data-testid="audio-record-btn"],
                         [data-testid="attach-btn"],
                         [data-testid="emoji-btn"] {
-                            min-width: 42px !important;
-                            min-height: 42px !important;
+                            min-width: 44px !important;
+                            min-height: 44px !important;
                             display: flex !important;
                             align-items: center !important;
                             justify-content: center !important;
                         }
 
-                        /* ===== CALL / TOOLBAR BUTTONS ===== */
                         [data-testid="call-main-btn"],
                         [data-testid="call-video-btn"],
                         [data-testid="search-toolbar-button"],
@@ -325,7 +352,8 @@ class WaultWebViewClient(
                             min-height: 40px !important;
                         }
 
-                        /* ===== MENU BAR ICONS (preserve Communities/Status/Channels) ===== */
+
+                        /* ========== MENU BAR (preserve Communities/Status/Channels) ========== */
                         [data-testid="menu-bar-profile-photo"],
                         [data-testid="menu-bar-new-chat-icon"],
                         [data-testid="menu-bar-communities-icon"],
@@ -341,10 +369,12 @@ class WaultWebViewClient(
                             opacity: 0.92 !important;
                         }
 
-                        /* ===== QR / STARTUP SCREENS ===== */
+
+                        /* ========== QR / STARTUP SCREENS ========== */
                         #startup,
                         #landing {
                             background: var(--wault-bg) !important;
+                            width: 100% !important;
                         }
 
                         body.wault-qr-mode,
@@ -355,8 +385,7 @@ class WaultWebViewClient(
                         }
 
                         body.wault-qr-mode [data-testid="qrcode"] {
-                            transform: none !important;
-                            max-width: 280px !important;
+                            max-width: 264px !important;
                             margin: 0 auto !important;
                         }
 
@@ -366,7 +395,8 @@ class WaultWebViewClient(
                             border-radius: 16px !important;
                         }
 
-                        /* ===== NOTIFICATIONS / DIVIDERS ===== */
+
+                        /* ========== DIVIDERS / NOTIFICATIONS ========== */
                         [data-testid="notification-box"],
                         [data-testid="msg-date-divider"],
                         [data-testid="unread-messages-divider"] {
@@ -374,7 +404,8 @@ class WaultWebViewClient(
                             border-radius: 12px !important;
                         }
 
-                        /* ===== HIDE DESKTOP ARTIFACTS ===== */
+
+                        /* ========== HIDE DESKTOP ARTIFACTS ========== */
                         [data-testid="download-mobile-app-banner"],
                         [data-testid="wa-web-banner"],
                         [data-testid="alert-phone"],
@@ -382,19 +413,28 @@ class WaultWebViewClient(
                             display: none !important;
                         }
 
-                        /* ===== WAULT MODE CLASSES ===== */
-                        body.wault-session-active,
-                        body.wault-session-active #app {
-                            background: var(--wault-bg) !important;
+
+                        /* ========== POPUPS / CONTEXT MENUS ========== */
+                        [data-testid="popup-contents"],
+                        [role="application"] [data-testid="popup-contents"] {
+                            background: var(--wault-surface-2) !important;
+                            border-radius: 14px !important;
+                            border: 1px solid rgba(255,255,255,0.06) !important;
+                            box-shadow: 0 8px 32px rgba(0,0,0,0.45) !important;
                         }
 
-                        body.wault-chat-mode header,
-                        body.wault-chat-mode [data-testid="chat-list-header"],
-                        body.wault-chat-mode [data-testid="chat-header"] {
-                            backdrop-filter: none !important;
+
+                        /* ========== EMOJI / STICKER / GIF PANELS ========== */
+                        [data-testid="emoji-panel"],
+                        [data-testid="sticker-panel"],
+                        [data-testid="gif-panel"] {
+                            background: var(--wault-surface) !important;
+                            border-top: 1px solid rgba(255,255,255,0.04) !important;
+                            width: 100% !important;
                         }
 
-                        /* ===== MEDIA VIEWER / OVERLAYS ===== */
+
+                        /* ========== MEDIA ========== */
                         [data-testid="media-viewer"],
                         [data-testid="image-thumb"],
                         [data-testid="video-player"] {
@@ -402,44 +442,114 @@ class WaultWebViewClient(
                             border-radius: 10px !important;
                         }
 
-                        /* ===== EMOJI / STICKER PANELS ===== */
-                        [data-testid="emoji-panel"],
-                        [data-testid="sticker-panel"],
-                        [data-testid="gif-panel"] {
-                            background: var(--wault-surface) !important;
-                            border-top: 1px solid rgba(255,255,255,0.04) !important;
-                        }
 
-                        /* ===== CONTEXT MENU / POPUP STYLING ===== */
-                        [data-testid="popup-contents"],
-                        [role="application"] [data-testid="popup-contents"] {
-                            background: var(--wault-surface-2) !important;
-                            border-radius: 14px !important;
-                            border: 1px solid rgba(255,255,255,0.06) !important;
-                            box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
-                        }
-
-                        /* ===== LINK PREVIEWS ===== */
-                        [data-testid="link-preview"] {
-                            border-radius: 12px !important;
-                            overflow: hidden !important;
-                        }
-
-                        /* ===== QUOTED MESSAGES ===== */
+                        /* ========== QUOTED / LINK PREVIEW ========== */
                         [data-testid="quoted-message"] {
                             border-radius: 10px !important;
                             border-left: 3px solid var(--wault-accent) !important;
                         }
 
-                        /* ===== LOADING / PROGRESS INDICATORS ===== */
-                        [data-testid="status-spinner"],
-                        [role="progressbar"] {
-                            opacity: 0.8 !important;
+                        [data-testid="link-preview"] {
+                            border-radius: 12px !important;
+                            overflow: hidden !important;
                         }
 
                     `;
                     document.head.appendChild(style);
                     document.body.classList.add('wault-session-active');
+                } catch (e) {}
+            })();
+        """.trimIndent()
+
+        webView.evaluateJavascript(js, null)
+    }
+
+    private fun injectWaultPanelController(webView: WebView) {
+        val js = """
+            (function() {
+                try {
+                    if (window.__waultPanelControllerInstalled) return;
+                    window.__waultPanelControllerInstalled = true;
+
+                    var previousChatOpen = false;
+
+                    function hasActiveConversation() {
+                        var main = document.getElementById('main');
+                        if (!main) return false;
+                        if (main.querySelector('footer')) return true;
+                        if (main.querySelector('[data-testid="conversation-compose-box-input"]')) return true;
+                        if (main.querySelector('[data-testid="conversation-panel-wrapper"]')) return true;
+                        return false;
+                    }
+
+                    function updateState() {
+                        var body = document.body;
+                        if (!body) return;
+
+                        var qr = document.querySelector('[data-testid="qrcode"]');
+
+                        body.classList.remove('wault-qr-mode');
+
+                        if (qr) {
+                            body.classList.add('wault-qr-mode');
+                            body.classList.remove('wault-chat-open');
+                            previousChatOpen = false;
+                            return;
+                        }
+
+                        var chatOpen = hasActiveConversation();
+
+                        if (chatOpen !== previousChatOpen) {
+                            previousChatOpen = chatOpen;
+
+                            if (chatOpen) {
+                                body.classList.add('wault-chat-open');
+                                setTimeout(function() {
+                                    var el = document.activeElement;
+                                    if (el && el !== document.body && el.tagName !== 'BODY') {
+                                        el.blur();
+                                    }
+                                }, 120);
+                            } else {
+                                body.classList.remove('wault-chat-open');
+                            }
+                        }
+                    }
+
+                    window.__waultHandleBack = function() {
+                        if (document.body && document.body.classList.contains('wault-chat-open')) {
+                            document.body.classList.remove('wault-chat-open');
+                            previousChatOpen = false;
+                            setTimeout(function() {
+                                var el = document.activeElement;
+                                if (el && el !== document.body) el.blur();
+                            }, 50);
+                            return 'true';
+                        }
+                        return 'false';
+                    };
+
+                    updateState();
+
+                    var debounceTimer = null;
+                    var observer = new MutationObserver(function() {
+                        if (debounceTimer) return;
+                        debounceTimer = setTimeout(function() {
+                            debounceTimer = null;
+                            updateState();
+                        }, 80);
+                    });
+
+                    var target = document.body || document.documentElement;
+                    if (target) {
+                        observer.observe(target, {
+                            childList: true,
+                            subtree: true
+                        });
+                    }
+
+                    setInterval(updateState, 600);
+
                 } catch (e) {}
             })();
         """.trimIndent()
@@ -499,7 +609,7 @@ class WaultWebViewClient(
                         } catch (e) {}
                     }
 
-                    function detectState() {
+                    function detectLoginState() {
                         try {
                             var qr = document.querySelector('[data-testid="qrcode"]');
                             var paneSide = document.querySelector('#pane-side');
@@ -513,55 +623,9 @@ class WaultWebViewClient(
                     }
 
                     sendUnreadCount();
-                    detectState();
+                    detectLoginState();
                     setInterval(sendUnreadCount, 3000);
-                    setInterval(detectState, 2000);
-
-                } catch (e) {}
-            })();
-        """.trimIndent()
-
-        webView.evaluateJavascript(js, null)
-    }
-
-    private fun injectQrAwareLayoutLogic(webView: WebView) {
-        val js = """
-            (function() {
-                try {
-                    if (window.__waultQrAwareInstalled) return;
-                    window.__waultQrAwareInstalled = true;
-
-                    function updateModeClasses() {
-                        try {
-                            var body = document.body;
-                            if (!body) return;
-
-                            var qr = document.querySelector('[data-testid="qrcode"]');
-                            var paneSide = document.querySelector('#pane-side');
-                            var chatOpen = document.querySelector('#main');
-
-                            body.classList.remove('wault-qr-mode');
-                            body.classList.remove('wault-chat-mode');
-
-                            if (qr) {
-                                body.classList.add('wault-qr-mode');
-                            } else if (paneSide || chatOpen) {
-                                body.classList.add('wault-chat-mode');
-                            }
-                        } catch (e) {}
-                    }
-
-                    updateModeClasses();
-
-                    var observer = new MutationObserver(function() {
-                        updateModeClasses();
-                    });
-
-                    observer.observe(document.documentElement || document.body, {
-                        childList: true,
-                        subtree: true,
-                        attributes: false
-                    });
+                    setInterval(detectLoginState, 2000);
 
                 } catch (e) {}
             })();

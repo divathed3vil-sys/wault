@@ -390,15 +390,8 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
         settings.loadsImagesAutomatically = true
-
-        // --- PHASE 1 LAYOUT REVOLUTION ---
-        // Use device-width viewport instead of desktop 980px viewport.
-        // This triggers WhatsApp Web's responsive single-panel mobile layout
-        // (chat list full-width, conversation full-width, mobile-like navigation)
-        // while keeping the desktop user agent to avoid app-store redirects.
         settings.useWideViewPort = false
         settings.loadWithOverviewMode = false
-
         settings.mediaPlaybackRequiresUserGesture = false
         settings.javaScriptCanOpenWindowsAutomatically = false
         settings.setSupportMultipleWindows(false)
@@ -409,9 +402,6 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         settings.allowFileAccess = true
         settings.allowContentAccess = true
-
-        // Desktop identity (prevents WhatsApp from redirecting to mobile download page)
-        // but the narrow viewport triggers WhatsApp Web's responsive single-panel mode
         settings.userAgentString =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                 "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -546,10 +536,33 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
 
     private fun handleBackPress() {
         val currentWebView = webView
-        if (currentWebView != null && currentWebView.canGoBack()) {
-            currentWebView.goBack()
-        } else {
+        if (currentWebView == null) {
             finish()
+            return
+        }
+
+        // Ask the WAult panel controller if it can handle this back press
+        // (i.e. return from conversation view to chat list)
+        currentWebView.evaluateJavascript(
+            "(function() { return (window.__waultHandleBack ? window.__waultHandleBack() : 'false'); })()"
+        ) { result ->
+            // evaluateJavascript returns the value wrapped in quotes: "\"true\"" or "\"false\""
+            val handled = result != null &&
+                result.replace("\"", "").replace("'", "").trim().equals("true", ignoreCase = true)
+
+            if (handled) {
+                // Panel controller switched from conversation back to chat list
+                return@evaluateJavascript
+            }
+
+            // Panel controller didn't handle it — use standard WebView back or close
+            runOnUiThread {
+                if (currentWebView.canGoBack()) {
+                    currentWebView.goBack()
+                } else {
+                    finish()
+                }
+            }
         }
     }
 
