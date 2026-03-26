@@ -163,6 +163,7 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         }
 
         webViewContainer.addView(loadingOverlay)
+
         rootLayout.addView(sessionContainer)
         rootLayout.addView(errorOverlay)
 
@@ -206,7 +207,6 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
                     setColor(adjustAlpha(accentColor, 0.16f))
                     setStroke(dp(1), adjustAlpha(accentColor, 0.35f))
                 }
-
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -344,7 +344,6 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
                     marginEnd = dp(10)
                 }
             )
-
             buttonsRow.addView(closeButton)
 
             content.addView(title)
@@ -391,8 +390,15 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
         settings.loadsImagesAutomatically = true
-        settings.useWideViewPort = true
-        settings.loadWithOverviewMode = true
+
+        // --- PHASE 1 LAYOUT REVOLUTION ---
+        // Use device-width viewport instead of desktop 980px viewport.
+        // This triggers WhatsApp Web's responsive single-panel mobile layout
+        // (chat list full-width, conversation full-width, mobile-like navigation)
+        // while keeping the desktop user agent to avoid app-store redirects.
+        settings.useWideViewPort = false
+        settings.loadWithOverviewMode = false
+
         settings.mediaPlaybackRequiresUserGesture = false
         settings.javaScriptCanOpenWindowsAutomatically = false
         settings.setSupportMultipleWindows(false)
@@ -403,9 +409,12 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         settings.allowFileAccess = true
         settings.allowContentAccess = true
+
+        // Desktop identity (prevents WhatsApp from redirecting to mobile download page)
+        // but the narrow viewport triggers WhatsApp Web's responsive single-panel mode
         settings.userAgentString =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
         val jsBridge = WaultJsBridge(
             applicationContext = applicationContext,
@@ -438,6 +447,7 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         webViewContainer.addView(loadingOverlay)
 
         webView = createdWebView
+
         createdWebView.loadUrl(WHATSAPP_URL)
     }
 
@@ -448,7 +458,6 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
         mimeType: String?
     ) {
         if (url.isNullOrBlank()) return
-
         try {
             val request = DownloadManager.Request(Uri.parse(url)).apply {
                 setMimeType(mimeType)
@@ -469,16 +478,13 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
                     Environment.DIRECTORY_DOWNLOADS,
                     URLUtil.guessFileName(url, contentDisposition, mimeType)
                 )
-
                 val cookies = CookieManager.getInstance().getCookie(url)
                 if (!cookies.isNullOrBlank()) {
                     addRequestHeader("Cookie", cookies)
                 }
             }
-
             val downloadManager =
                 getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
-
             if (downloadManager != null) {
                 downloadManager.enqueue(request)
             } else {
@@ -512,7 +518,6 @@ abstract class BaseWebViewSessionActivity : ComponentActivity() {
     fun showErrorOverlay(message: String? = null) {
         loadingOverlay.visibility = View.GONE
         errorOverlay.visibility = View.VISIBLE
-
         if (!message.isNullOrBlank()) {
             EventBroadcaster.sendSessionError(
                 context = applicationContext,

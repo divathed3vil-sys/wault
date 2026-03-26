@@ -1,3 +1,4 @@
+// File: lib/theme/wault_colors.dart
 import 'dart:ui';
 
 class WaultColors {
