@@ -66,7 +66,7 @@ class WaultWebViewClient(
         super.onPageFinished(view, url)
         injectViewportMeta(view)
         injectWaultMobileShell(view)
-        injectWaultPanelController(view)
+        injectWaultPanelEngine(view)
         injectFocusedSessionBehavior(view)
         injectStateObservers(view)
         activity.onPageReady()
@@ -98,6 +98,13 @@ class WaultWebViewClient(
                         vp.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
                         if (document.head) document.head.appendChild(vp);
                     }
+                    var cs = document.querySelector('meta[name="color-scheme"]');
+                    if (!cs) {
+                        cs = document.createElement('meta');
+                        cs.name = 'color-scheme';
+                        cs.content = 'dark';
+                        if (document.head) document.head.appendChild(cs);
+                    }
                 } catch(e) {}
             })();
         """.trimIndent()
@@ -117,7 +124,8 @@ class WaultWebViewClient(
                     style.id = 'wault-mobile-shell';
                     style.textContent = `
 
-                        /* ========== THEME VARIABLES ========== */
+
+                        /* ========== VARIABLES ========== */
                         :root {
                             --wault-bg: #0b141a;
                             --wault-surface: #111b21;
@@ -134,8 +142,6 @@ class WaultWebViewClient(
                             background: var(--wault-bg) !important;
                             color: var(--wault-text) !important;
                             overscroll-behavior: none !important;
-                            overscroll-behavior-y: none !important;
-                            overscroll-behavior-x: none !important;
                             overflow-x: hidden !important;
                             -webkit-tap-highlight-color: transparent !important;
                             -webkit-overflow-scrolling: touch !important;
@@ -158,17 +164,9 @@ class WaultWebViewClient(
                             scrollbar-width: thin !important;
                             scrollbar-color: rgba(255,255,255,0.08) transparent !important;
                         }
-                        *::-webkit-scrollbar {
-                            width: 3px !important;
-                            height: 0px !important;
-                        }
-                        *::-webkit-scrollbar-track {
-                            background: transparent !important;
-                        }
-                        *::-webkit-scrollbar-thumb {
-                            background: rgba(255,255,255,0.08) !important;
-                            border-radius: 999px !important;
-                        }
+                        *::-webkit-scrollbar { width: 3px !important; height: 0px !important; }
+                        *::-webkit-scrollbar-track { background: transparent !important; }
+                        *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08) !important; border-radius: 999px !important; }
 
 
                         /* ========== USER SELECTION ========== */
@@ -183,13 +181,11 @@ class WaultWebViewClient(
                         }
 
 
-                        /* ========== WAULT ACCENT LINE ========== */
+                        /* ========== ACCENT LINE ========== */
                         #app::before {
                             content: "";
                             position: fixed;
-                            top: 0;
-                            left: 0;
-                            right: 0;
+                            top: 0; left: 0; right: 0;
                             height: 2px;
                             background: linear-gradient(90deg, transparent 0%, var(--wault-accent) 50%, transparent 100%);
                             z-index: 2147483646;
@@ -198,42 +194,69 @@ class WaultWebViewClient(
                         }
 
 
-                        /* ========== PANEL SYSTEM ========== */
+                        /* ========== OVERLAY PANEL SYSTEM ========== */
 
-                        /* Both panels always full width */
-                        #pane-side {
-                            width: 100% !important;
-                            min-width: 100% !important;
-                            max-width: 100% !important;
-                            flex: 1 1 100% !important;
-                        }
-
-                        #main {
-                            width: 100% !important;
-                            min-width: 100% !important;
-                            max-width: 100% !important;
-                            flex: 1 1 100% !important;
-                        }
-
-                        #side {
-                            width: 100% !important;
-                            min-width: 100% !important;
-                            max-width: 100% !important;
-                        }
-
-                        /* DEFAULT: Chat list visible, conversation hidden */
-                        body:not(.wault-chat-open) #main {
-                            display: none !important;
-                        }
-
-                        /* CHAT OPEN: Conversation visible, chat list hidden */
-                        body.wault-chat-open #pane-side {
-                            display: none !important;
-                        }
-
-                        body.wault-chat-open #main {
+                        [data-wault-panel="side"] {
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100vw !important;
+                            height: 100% !important;
+                            z-index: 1001 !important;
+                            background: var(--wault-bg) !important;
                             display: flex !important;
                             flex-direction: column !important;
+                            box-sizing: border-box !important;
+                            overflow: hidden !important;
+                            min-width: 0 !important;
+                            max-width: none !important;
+                            flex-basis: auto !important;
+                            flex-shrink: 0 !important;
+                            flex-grow: 0 !important;
+                            transform: none !important;
+                            margin: 0 !important;
+                        }
+
+                        [data-wault-panel="main"] {
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100vw !important;
+                            height: 100% !important;
+                            z-index: 1000 !important;
+                            background: var(--wault-bg) !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            box-sizing: border-box !important;
+                            overflow: hidden !important;
+                            min-width: 0 !important;
+                            max-width: none !important;
+                            flex-basis: auto !important;
+                            flex-shrink: 0 !important;
+                            flex-grow: 0 !important;
+                            transform: none !important;
+                            margin: 0 !important;
+                        }
+
+                        /* Chat open: bring main on top, push side behind */
+                        body.wault-chat-open [data-wault-panel="side"] {
+                            z-index: 999 !important;
+                        }
+
+                        body.wault-chat-open [data-wault-panel="main"] {
+                            z-index: 1001 !important;
+                        }
+
+                        /* Force children to fill panel width */
+                        [data-wault-panel] > * {
+                            max-width: 100% !important;
+                            width: 100% !important;
+                        }
+
+                        [data-wault-panel] header,
+                        [data-wault-panel] footer {
+                            width: 100% !important;
+                            max-width: 100% !important;
                         }
 
 
@@ -331,7 +354,7 @@ class WaultWebViewClient(
                         }
 
 
-                        /* ========== TOUCH-FRIENDLY ACTION BUTTONS ========== */
+                        /* ========== TOUCH FRIENDLY BUTTONS ========== */
                         [data-testid="send-btn"],
                         [data-testid="audio-record-btn"],
                         [data-testid="attach-btn"],
@@ -370,7 +393,7 @@ class WaultWebViewClient(
                         }
 
 
-                        /* ========== QR / STARTUP SCREENS ========== */
+                        /* ========== QR / STARTUP ========== */
                         #startup,
                         #landing {
                             background: var(--wault-bg) !important;
@@ -454,6 +477,7 @@ class WaultWebViewClient(
                             overflow: hidden !important;
                         }
 
+
                     `;
                     document.head.appendChild(style);
                     document.body.classList.add('wault-session-active');
@@ -464,80 +488,167 @@ class WaultWebViewClient(
         webView.evaluateJavascript(js, null)
     }
 
-    private fun injectWaultPanelController(webView: WebView) {
+    private fun injectWaultPanelEngine(webView: WebView) {
         val js = """
             (function() {
                 try {
-                    if (window.__waultPanelControllerInstalled) return;
-                    window.__waultPanelControllerInstalled = true;
+                    if (window.__waultPanelEngineInstalled) return;
+                    window.__waultPanelEngineInstalled = true;
 
-                    var previousChatOpen = false;
+                    var chatOpen = false;
+
+                    function findSidePanel() {
+                        var side = document.getElementById('side');
+                        if (side) return side;
+
+                        var mainEl = document.getElementById('main');
+                        var paneSide = document.getElementById('pane-side');
+
+                        if (mainEl && paneSide) {
+                            var parent = mainEl.parentElement;
+                            if (parent) {
+                                var children = parent.children;
+                                for (var i = 0; i < children.length; i++) {
+                                    if (children[i] !== mainEl && (children[i] === paneSide || children[i].contains(paneSide))) {
+                                        return children[i];
+                                    }
+                                }
+                            }
+                        }
+
+                        if (paneSide && paneSide.parentElement) {
+                            return paneSide.parentElement;
+                        }
+
+                        return null;
+                    }
+
+                    function tagPanels() {
+                        var tagged = false;
+
+                        if (!document.querySelector('[data-wault-panel="side"]')) {
+                            var sideEl = findSidePanel();
+                            if (sideEl) {
+                                sideEl.setAttribute('data-wault-panel', 'side');
+                                tagged = true;
+                            }
+                        } else {
+                            tagged = true;
+                        }
+
+                        var mainEl = document.getElementById('main');
+                        if (mainEl && !mainEl.hasAttribute('data-wault-panel')) {
+                            mainEl.setAttribute('data-wault-panel', 'main');
+                        }
+
+                        return tagged;
+                    }
 
                     function hasActiveConversation() {
                         var main = document.getElementById('main');
                         if (!main) return false;
-                        if (main.querySelector('footer')) return true;
                         if (main.querySelector('[data-testid="conversation-compose-box-input"]')) return true;
                         if (main.querySelector('[data-testid="conversation-panel-wrapper"]')) return true;
+                        if (main.querySelector('footer')) return true;
                         return false;
                     }
 
-                    function updateState() {
-                        var body = document.body;
-                        if (!body) return;
-
-                        var qr = document.querySelector('[data-testid="qrcode"]');
-
-                        body.classList.remove('wault-qr-mode');
-
-                        if (qr) {
-                            body.classList.add('wault-qr-mode');
-                            body.classList.remove('wault-chat-open');
-                            previousChatOpen = false;
-                            return;
-                        }
-
-                        var chatOpen = hasActiveConversation();
-
-                        if (chatOpen !== previousChatOpen) {
-                            previousChatOpen = chatOpen;
-
-                            if (chatOpen) {
-                                body.classList.add('wault-chat-open');
-                                setTimeout(function() {
-                                    var el = document.activeElement;
-                                    if (el && el !== document.body && el.tagName !== 'BODY') {
-                                        el.blur();
-                                    }
-                                }, 120);
-                            } else {
-                                body.classList.remove('wault-chat-open');
+                    function switchToChatOpen() {
+                        if (chatOpen) return;
+                        chatOpen = true;
+                        document.body.classList.add('wault-chat-open');
+                        setTimeout(function() {
+                            var el = document.activeElement;
+                            if (el && el !== document.body && el.tagName !== 'BODY') {
+                                el.blur();
                             }
+                        }, 150);
+                    }
+
+                    function switchToChatList() {
+                        if (!chatOpen) return;
+                        chatOpen = false;
+                        document.body.classList.remove('wault-chat-open');
+                        setTimeout(function() {
+                            var el = document.activeElement;
+                            if (el && el !== document.body) {
+                                el.blur();
+                            }
+                        }, 50);
+                    }
+
+                    function waitForConversation(retries) {
+                        if (retries <= 0) return;
+                        if (hasActiveConversation()) {
+                            tagPanels();
+                            switchToChatOpen();
+                        } else {
+                            setTimeout(function() {
+                                waitForConversation(retries - 1);
+                            }, 150);
                         }
                     }
 
                     window.__waultHandleBack = function() {
-                        if (document.body && document.body.classList.contains('wault-chat-open')) {
-                            document.body.classList.remove('wault-chat-open');
-                            previousChatOpen = false;
-                            setTimeout(function() {
-                                var el = document.activeElement;
-                                if (el && el !== document.body) el.blur();
-                            }, 50);
+                        if (chatOpen) {
+                            switchToChatList();
                             return 'true';
                         }
                         return 'false';
                     };
 
-                    updateState();
+                    document.addEventListener('click', function(e) {
+                        if (chatOpen) return;
+
+                        var target = e.target;
+                        if (!target) return;
+
+                        var chatItem = target.closest(
+                            '[data-testid="cell-frame-container"], ' +
+                            '[data-testid="cell-frame"], ' +
+                            '[data-testid="chat-list-item"], ' +
+                            '[data-testid="list-item"], ' +
+                            '[role="listitem"], ' +
+                            '[role="row"]'
+                        );
+
+                        if (chatItem) {
+                            setTimeout(function() {
+                                waitForConversation(6);
+                            }, 250);
+                        }
+                    }, true);
+
+                    function updateQrMode() {
+                        var qr = document.querySelector('[data-testid="qrcode"]');
+                        if (qr) {
+                            document.body.classList.add('wault-qr-mode');
+                            if (chatOpen) switchToChatList();
+                        } else {
+                            document.body.classList.remove('wault-qr-mode');
+                        }
+                    }
+
+                    function periodicCheck() {
+                        tagPanels();
+                        updateQrMode();
+
+                        if (chatOpen && !hasActiveConversation()) {
+                            switchToChatList();
+                        }
+                    }
+
+                    tagPanels();
+                    updateQrMode();
 
                     var debounceTimer = null;
                     var observer = new MutationObserver(function() {
                         if (debounceTimer) return;
                         debounceTimer = setTimeout(function() {
                             debounceTimer = null;
-                            updateState();
-                        }, 80);
+                            tagPanels();
+                            updateQrMode();
+                        }, 120);
                     });
 
                     var target = document.body || document.documentElement;
@@ -548,7 +659,7 @@ class WaultWebViewClient(
                         });
                     }
 
-                    setInterval(updateState, 600);
+                    setInterval(periodicCheck, 1000);
 
                 } catch (e) {}
             })();
