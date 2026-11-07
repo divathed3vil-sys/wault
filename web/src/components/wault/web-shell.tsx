@@ -713,7 +713,11 @@ function InboxPane({
 
         <div className="no-scrollbar flex-1 overflow-y-auto px-2 pb-3">
           {visible.length === 0 ? (
-            <p className={cn("mt-10 text-center text-[13px]", TEXT_2)}>No chats match your search</p>
+            <p className={cn("mt-10 text-center text-[13px]", TEXT_2)}>
+              {query.trim()
+                ? "No chats match your search"
+                : "No chats yet — pair a number and messages land here"}
+            </p>
           ) : (
             visible.map((chat) => {
               const account = accounts.find((a) => a.id === chat.accountId)

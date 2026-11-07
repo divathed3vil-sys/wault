@@ -20,6 +20,7 @@ import {
   type BridgeStats,
 } from "@/lib/wault-bridge"
 
+import { INITIAL_ACCOUNTS } from "./data"
 import type { Account, AccountStatus, Chat, Message } from "./data"
 import { useWaultStore } from "./wault-app"
 
@@ -231,9 +232,9 @@ export function WaultLiveProvider({ children }: { children: React.ReactNode }) {
         const list = await bridge.request<BridgeAccount[]>("accounts:list")
         if (disposed || !Array.isArray(list) || st().mode !== "app") return
         st().seedLiveAccounts(list.map((a) => mapAccount(a)))
-        for (const a of list) {
-          if (a.status === "connected") void refreshAllChats()
-        }
+        // Always sync chats — disconnected accounts can still hold history
+        // rows, and an empty-but-live inbox must not keep demo data.
+        void refreshAllChats()
       } catch {
         /* offline */
       }
@@ -247,9 +248,19 @@ export function WaultLiveProvider({ children }: { children: React.ReactNode }) {
       bridge.on("bridge:down", () => setLive(false)),
       bridge.on("accounts", (list: BridgeAccount[]) => {
         if (st().mode !== "app") return
-        st().applyAccounts(
-          list.map((a) => mapAccount(a, st().accounts.find((x) => x.id === a.id))),
+        const s = useWaultStore.getState()
+        // First live snapshot — take over from the demo dataset (this also
+        // clears the demo chats so live mode never shows mock conversations).
+        const isDemo = s.accounts.some((a) =>
+          INITIAL_ACCOUNTS.some((d) => d.id === a.id),
         )
+        if (isDemo) {
+          s.seedLiveAccounts(list.map((a) => mapAccount(a)))
+        } else {
+          s.applyAccounts(
+            list.map((a) => mapAccount(a, s.accounts.find((x) => x.id === a.id))),
+          )
+        }
       }),
       bridge.on("qr", (p: { accountId: string; dataUrl: string; attempt: number }) => {
         const pairing = st().pairing

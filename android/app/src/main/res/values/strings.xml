@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wault</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_vault">Vault</string>
+    <string name="tab_inbox">Inbox</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Vault -->
+    <string name="vault_title">Vault</string>
+    <string name="vault_subtitle_healthy">%1$d workspaces · all sessions healthy</string>
+    <string name="vault_subtitle_attention">%1$d workspaces · %2$d sessions reconnecting</string>
+    <string name="vault_health_all_good">All sessions healthy</string>
+    <string name="vault_health_reconnecting">%1$d sessions reconnecting</string>
+    <string name="vault_slots_label">Linked device slots</string>
+    <string name="vault_slots_value">%1$d of %2$d</string>
+    <string name="vault_keystore_note">Keys sealed with device keystore</string>
+    <string name="account_phone_pending">Not linked yet</string>
+    <string name="add_number_title">Add a number</string>
+    <string name="add_number_subtitle">Link another WhatsApp number to this vault</string>
+    <string name="add_number_full_subtitle">All %1$d device slots are in use</string>
+
+    <!-- Inbox -->
+    <string name="inbox_title">Inbox</string>
+    <string name="inbox_search_hint">Search chats</string>
+    <string name="inbox_empty_title">No chats match</string>
+    <string name="inbox_empty_subtitle">Try a different search or clear the account filter</string>
+    <string name="inbox_chip_all">All</string>
+
+    <!-- Conversation -->
+    <string name="back">Back</string>
+    <string name="send">Send</string>
+    <string name="composer_hint">Message</string>
+    <string name="media_placeholder">Photo</string>
+    <string name="conversation_group_subtitle">Group</string>
+    <string name="conversation_online">Online</string>
+    <string name="conversation_offline">Last seen recently</string>
+    <string name="conversation_via_wault">via Wault</string>
+
+    <!-- Pairing -->
+    <string name="pairing_title">Pair a number</string>
+    <string name="pairing_waiting">Starting secure session…</string>
+    <string name="pairing_qr_instruction">On your phone open WhatsApp, then Settings › Linked devices › Link a device, and scan this code.</string>
+    <string name="pairing_qr_caption">Wault links as a companion device. Session keys never leave this phone.</string>
+    <string name="pairing_simulate_scan">Simulate scan</string>
+    <string name="pairing_linking">Linking…</string>
+    <string name="pairing_linked_title">Number linked</string>
+    <string name="pairing_linked_body">The session is now live in your vault.</string>
+    <string name="pairing_failed_title">Pairing failed</string>
+    <string name="pairing_failed_body">We could not complete the link. Try again.</string>
+    <string name="pairing_retry">Try again</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dark_theme">Dark theme</string>
+    <string name="settings_dark_theme_hint">Applies across the whole app</string>
+    <string name="settings_engine_title">Engine</string>
+    <string name="settings_engine_name">Mock engine</string>
+    <string name="settings_engine_summary">Phase 2 brings the on-device WhatsApp engine.</string>
+    <string name="settings_stats_title">Vault stats</string>
+    <string name="settings_stat_accounts">Accounts</string>
+    <string name="settings_stat_chats">Chats</string>
+    <string name="settings_stat_messages_today">Messages today</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_name">Wault v2</string>
+    <string name="settings_about_detail">Phase 1 foundation · Compose UI on the MockEngine</string>
+
+    <!-- Account status pills -->
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_qr">Scan QR</string>
+    <string name="status_reconnecting">Reconnecting</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_error">Error</string>
+</resources>

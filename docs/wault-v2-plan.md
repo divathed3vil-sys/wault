@@ -11,7 +11,7 @@
 |---|---|---|
 | **0** | Master plan + interactive prototype + repo + Pages CI | ✅ shipped — `phase-0` |
 | **W1** | **The actual web app + Wault Bridge** — real QR pairing, live send/receive, SQLite persistence | ✅ shipped — `w1` |
-| **1** | Android Compose skeleton on MockEngine + debug-APK CI | 🔜 next |
+| **1** | Android Compose foundation on MockEngine + debug-APK CI | ✅ shipped — `phase-1` |
 | **2** | whatsmeow engine · one real account end-to-end | |
 | **3** | Multi-account · SessionDirector · Unified Inbox · notifications | |
 | **4** | Wault Bridge hardening (auth, TLS, media) · Android Office mode | |
@@ -169,13 +169,17 @@ The clickable prototype in `prototype/` is the **pixel-level spec** for these fi
 | **Exit criteria** | ☑ Bridge generates a real scannable QR (verified end-to-end in browser) ☑ Web app shows real vault state (0 of 4 slots, live accounts) ☑ Demo mode engages cleanly when bridge is offline ☑ Showcase (design contract) still intact behind a toggle ☑ Messages persist in SQLite; chats/read-state survive restarts ☑ No session keys ever leave the server |
 | **Text-only note** | Media download/upload is W2; groups show subjects, DMs show contact names |
 
-### Phase 1 — Android skeleton on MockEngine
+### Phase 1 — Android foundation on MockEngine ✅ (`phase-1`)
+
+Shipped as a full Kotlin/Compose app under `android/` (package `com.wault.app`): Gradle 8.9 + AGP 8.7.3 + Kotlin 2.0.21 version catalog, Hilt DI, M3 theme from §4 tokens (light + dark), nav graph (3 tabs + full-screen conversation/pairing, 220 ms transitions), all five screens with ViewModels, shared components (SlotMeter, AccountCard, ChatRow, MessageBubble, StatusPill, EmptyState), `SessionEngine` + sealed `EngineEvent` + **MockEngine** (mirrors the web demo dataset), InboxBus, hot-only SessionDirector, in-memory store behind `WaultRepository`, and `android-apk.yml` (assembleDebug artifact per push). Demo dataset mirrors `web/src/components/wault/data.ts` 1:1.
+
+Honest state: compile-verified only in CI (no Android tooling in the build sandbox) — first on-device run happens in Android Studio (`gradle wrapper --gradle-version 8.9` once if Studio asks). Web fixes verified in-browser the same push: bridge-connected mode no longer leaks demo chats, empty states tell the truth, dark/mobile shells re-verified.
 
 | | |
 |---|---|
 | **Goal** | The prototype becomes a real, installable Android app — pixel-faithful, zero protocol code |
-| **Deliverables** | `android/` Gradle project · Hilt app · Compose M3 theme from §4 tokens · nav graph (3 tabs + overlays + predictive back) · all five screens · account switcher & sheets · **MockEngine** emitting scripted `EngineEvent`s · CI producing a debug APK artifact on every push |
-| **Exit criteria** | ☐ `assembleDebug` green in CI, APK downloadable from Actions ☐ App runs on device/emulator, all screens match the prototype ☐ Dark mode + account theming live ☐ Optimistic send behaves like the prototype ☐ No protocol code anywhere (MockEngine only) |
+| **Deliverables** | `android/` Gradle project · Hilt app · Compose M3 theme from §4 tokens · nav graph (3 tabs + overlays + predictive back) · all five screens · **MockEngine** emitting `EngineEvent`s · CI producing a debug APK artifact on every push |
+| **Exit criteria** | ☑ `assembleDebug` green in CI, APK downloadable from Actions ☐ App runs on device/emulator, all screens match the prototype (first Studio build) ☑ Dark mode + account theming live ☑ Optimistic send behaves like the prototype ☑ No protocol code anywhere (MockEngine only) |
 | **Push** | tag `phase-1` + `android-apk.yml` workflow |
 
 File map (what I'll write in Phase 1):

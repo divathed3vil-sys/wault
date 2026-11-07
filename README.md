@@ -8,7 +8,7 @@ Each account runs as a real linked device (WhatsApp multi-device protocol) behin
 |---|---|---|
 | 0 | Master plan + interactive design prototype + repo + Pages CI | ✅ `phase-0` |
 | **W1** | **Actual web app + Wault Bridge** — real QR pairing, live messaging, SQLite persistence | ✅ **`w1`** |
-| 1 | Android Compose skeleton on MockEngine + APK CI | next |
+| 1 | Android Compose foundation on MockEngine + APK CI | ✅ `phase-1` |
 | 2 | whatsmeow engine on Android · one real account | |
 | 3 | Multi-account · Unified Inbox · notifications | |
 | 4 | Bridge hardening (auth, TLS, media) · Android Office mode | |
@@ -23,8 +23,8 @@ wault/
 ├── docs/wault-v2-plan.md   ← master build plan (source of truth — read this first)
 ├── web/                    ← the actual web app (Next.js + socket.io client)
 ├── bridge/                 ← Wault Bridge (bun + Baileys + SQLite + socket.io)
-├── android/                ← Phase 1+ · Kotlin + Jetpack Compose app
-└── .github/workflows/      ← CI: Pages deploy (now), APK builds (Phase 1+)
+├── android/                ← Phase 1 · Kotlin + Jetpack Compose app (MockEngine; real engine in Phase 2)
+└── .github/workflows/      ← CI: Pages deploy + debug-APK builds
 ```
 
 ## How it works

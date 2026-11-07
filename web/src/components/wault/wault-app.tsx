@@ -168,7 +168,9 @@ export const useWaultStore = create<WaultStore>()(
       seedLiveAccounts: (incoming) =>
         set((state) => {
           // Only takes over while the store still holds the demo dataset.
-          const isDemo = state.accounts.some((a) => a.id === "a1")
+          const isDemo = state.accounts.some((a) =>
+            INITIAL_ACCOUNTS.some((d) => d.id === a.id),
+          )
           if (!isDemo && state.accounts.length > 0) return {}
           return { accounts: incoming, chats: [], messagesByChat: {} }
         }),

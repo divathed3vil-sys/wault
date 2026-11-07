@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warm neutral window background behind the Compose surface tree. -->
+    <color name="wault_window_background">#F7F7F5</color>
+</resources>
