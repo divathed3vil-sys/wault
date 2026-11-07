@@ -55,6 +55,7 @@ class MockEngine(
     private val scope = CoroutineScope(
         SupervisorJob() + Dispatchers.Default + CoroutineName("MockEngine:$accountId"),
     )
+    private val random: Random = Random.Default
     private val _events = MutableSharedFlow<EngineEvent>(
         extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,

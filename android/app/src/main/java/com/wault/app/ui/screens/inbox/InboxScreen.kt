@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SearchOff
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +53,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+
+/** The "every chat" filter chip id. Top-level so UI defaults can reference it. */
+const val FILTER_ALL = "all"
 
 /** One account-filter chip. [accentHex] is null for the "All" chip. */
 data class InboxChipUi(
@@ -136,7 +140,6 @@ class InboxViewModel @Inject constructor(
     }
 
     companion object {
-        const val FILTER_ALL = "all"
         private const val KEY_FILTER = "filter"
         private const val FALLBACK_ACCENT = "#10B981"
     }

@@ -28,6 +28,8 @@ class WaultRepository(
     @ApplicationScope private val scope: CoroutineScope,
 ) {
 
+    private var bootstrapped = false
+
     init {
         scope.launch { bus.events.collect { handleEvent(it) } }
     }

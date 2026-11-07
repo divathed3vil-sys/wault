@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.DoneAll
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.Icon
@@ -136,8 +136,8 @@ private fun ReceiptTicks(receipt: Receipt?, accent: Color) {
     when (receipt) {
         null -> Unit
         Receipt.Sent -> TickIcon(Icons.Outlined.Check, muted)
-        Receipt.Delivered -> TickIcon(Icons.AutoMirrored.Outlined.DoneAll, muted)
-        Receipt.Read -> TickIcon(Icons.AutoMirrored.Outlined.DoneAll, accent)
+        Receipt.Delivered -> TickIcon(Icons.Filled.DoneAll, muted)
+        Receipt.Read -> TickIcon(Icons.Filled.DoneAll, accent)
     }
 }
 

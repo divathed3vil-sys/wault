@@ -45,7 +45,9 @@ class InboxBus @Inject constructor(
     init {
         scope.launch {
             engines
-                .flatMapLatest { list -> merge(list.map { it.events }) }
+                .flatMapLatest { list: List<SessionEngine> ->
+                    merge(*list.map { it.events }.toTypedArray())
+                }
                 .collect { event -> _events.tryEmit(event) }
         }
     }
