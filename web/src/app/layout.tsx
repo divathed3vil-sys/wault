@@ -14,18 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wault — Design Contract",
-  description:
-    "Multi-account WhatsApp client for Android and web. Material 3 foundations with Apple-grade restraint. Interactive design contract for the Wault v2 build.",
-  authors: [{ name: "Wault" }],
+  title: "Wault — Android UI Concept",
+  description: "Multi-account WhatsApp client concept for Android. Material 3 foundations with Apple-grade restraint. Design contract for a Jetpack Compose implementation.",
+  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
+  authors: [{ name: "Z.ai Team" }],
   icons: {
-    icon: "logo.svg",
+    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Wault — Design Contract",
-    description:
-      "Multi-account WhatsApp client concept. Android + Web Edition. Phase 0 of the Wault v2 build plan.",
+    title: "Z.ai Code Scaffold",
+    description: "AI-powered development with modern React stack",
+    url: "https://chat.z.ai",
+    siteName: "Z.ai",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Z.ai Code Scaffold",
+    description: "AI-powered development with modern React stack",
   },
 };
 

@@ -9,12 +9,13 @@
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| **0** | Master plan + interactive prototype (Android phone + Web Edition) + repo + Pages CI | ✅ **this push — tag `phase-0`** |
+| **0** | Master plan + interactive prototype + repo + Pages CI | ✅ shipped — `phase-0` |
+| **W1** | **The actual web app + Wault Bridge** — real QR pairing, live send/receive, SQLite persistence | ✅ shipped — `w1` |
 | **1** | Android Compose skeleton on MockEngine + debug-APK CI | 🔜 next |
 | **2** | whatsmeow engine · one real account end-to-end | |
 | **3** | Multi-account · SessionDirector · Unified Inbox · notifications | |
-| **4** | Wault Bridge (self-hosted server) | |
-| **5** | Web client (Flutter web on BridgeEngine) | |
+| **4** | Wault Bridge hardening (auth, TLS, media) · Android Office mode | |
+| **5** | Web polish: PWA, media, receipts UI | |
 | **6** | Office layer | |
 | **7** | Polish & private distribution | |
 
@@ -151,13 +152,22 @@ The clickable prototype in `prototype/` is the **pixel-level spec** for these fi
 
 **The contract: one phase = one goal = one push = one tag (`phase-0` … `phase-7`).** A phase is *done* only when every exit criterion is checked **and** the push checklist (§6.3) is green.
 
-### Phase 0 — Foundations & design contract ✅ (this push)
+### Phase 0 — Foundations & design contract ✅ (`phase-0`)
 
 | | |
 |---|---|
 | **Deliverables** | This master plan · interactive prototype (5 Android screens in a phone frame + Web Edition three-pane shell, light/dark, persisted store) · GitHub monorepo · Pages CI |
 | **Exit criteria** | ☑ All 5 screens clickable with correct state transitions ☑ Pairing flow mutates accounts + slot meter ☑ Theme/view/filter survive reload (localStorage) ☑ CI builds the prototype and deploys Pages green |
-| **Push** | `phase-0` → prototype live at `https://divathed3vil-sys.github.io/wault/` |
+
+### Phase W1 — the actual web app + Wault Bridge ✅ (`w1`)
+
+*User decision:* no mockup on the web — the **real app**. That pulled the Bridge forward (the browser cannot hold WhatsApp sessions itself) and replaced the Flutter-web plan with the Next.js app that already speaks the Wault design language.
+
+| | |
+|---|---|
+| **Deliverables** | `web/` — the actual Wault web client: full-viewport desktop three-pane + mobile single-column shell, live/demo dual mode (auto-fallback when the bridge is unreachable) · `bridge/` — Wault Bridge v1: multi-account Baileys sessions, **real QR pairing**, live message events + receipts, per-account auth state on disk, SQLite message store, read receipts, socket.io API (`accounts:list · account:start · account:logout · account:remove · chats:list · chats:markRead · messages:list · message:send` + pushes) · optimistic sends with tmp→real swap · unread accounting server-side · Pages CI moved to `web/` |
+| **Exit criteria** | ☑ Bridge generates a real scannable QR (verified end-to-end in browser) ☑ Web app shows real vault state (0 of 4 slots, live accounts) ☑ Demo mode engages cleanly when bridge is offline ☑ Showcase (design contract) still intact behind a toggle ☑ Messages persist in SQLite; chats/read-state survive restarts ☑ No session keys ever leave the server |
+| **Text-only note** | Media download/upload is W2; groups show subjects, DMs show contact names |
 
 ### Phase 1 — Android skeleton on MockEngine
 
@@ -248,20 +258,19 @@ android/
 ```
 wault/                          ← github.com/divathed3vil-sys/wault, branch v2
 ├── docs/wault-v2-plan.md       ← this file (source of truth, updated every phase)
-├── prototype/                  ← design contract · Next.js static export → GitHub Pages
+├── web/                        ← the actual web app (Next.js) — Pages + live with bridge
+├── bridge/                     ← Wault Bridge (bun + Baileys + SQLite + socket.io)
 ├── android/                    ← Phase 1+ · Kotlin + Compose app
-├── bridge/                     ← Phase 4+ · Wault Bridge server
-├── web/                        ← Phase 5+ · Flutter web client
 └── .github/workflows/          ← pages.yml (now) · android-apk.yml (P1) · bridge.yml (P4)
 ```
 
-`main` keeps the v0 Flutter archive untouched for reference; once Phase 1 ships, `v2` becomes the default branch. Nothing from v0 is deleted.
+The Phase 0 design showcase lives inside `web/` behind the “Showcase” toggle (demo dataset, phone + framed shells). `main` keeps the v0 Flutter archive untouched; `v2` is the active branch.
 
 ### 6.2 CI inventory
 
 | Workflow | From | Does |
 |---|---|---|
-| `deploy-pages.yml` | Phase 0 (now) | Builds `prototype/` (static export, basePath `/wault`) → deploys to GitHub Pages |
+| `deploy-pages.yml` | Phase 0 (now builds `web/`) | Static export of the web app (basePath `/wault`) → GitHub Pages. On Pages the app runs in demo mode; self-hosted with the bridge it goes live automatically |
 | `android-apk.yml` | Phase 1 | `assembleDebug` → APK artifact on every push; signed build on tags |
 | `bridge.yml` | Phase 4 | Cross-compiles the bridge binary; attaches to releases |
 
@@ -293,6 +302,8 @@ wault/                          ← github.com/divathed3vil-sys/wault, branch v2
 ---
 
 ## 8. Web Edition — one bridge, thin clients
+
+> **Update (W1):** the web track is real now — the Next.js app + Baileys bridge shipped as Phase W1. Flutter web is dropped (the Next.js app already speaks the design language on every screen size). The architecture below is unchanged and is what W2+ hardens: auth, media proxy, resume cursors, PWA.
 
 Yes, the web version is worth building — but one hard truth shapes everything:
 
@@ -344,7 +355,8 @@ Each number pairs to the bridge **once** (consuming 1 of 4 linked-device slots) 
 
 ## 10. Immediate next actions
 
-1. **Push `phase-0`** — paste a fresh fine-grained PAT (repo-scoped, `Contents: RW` + `Workflows: RW`) and the staged repo goes up
-2. **Enable Pages once** — repo Settings → Pages → Source: "GitHub Actions"; after the first green run the prototype is live at `https://divathed3vil-sys.github.io/wault/`
+1. ~~Push `phase-0`~~ ✅ · ~~Build the actual web app + bridge~~ ✅ (`w1`)
+2. **Try it live:** open the preview → “Pair new account” → scan the QR with a WhatsApp number → chat from the browser
 3. **Phase 1 kickoff** — write the `android/` skeleton per the file map in §5 (Compose theme from §4 tokens, nav graph, five screens, MockEngine, APK CI)
-4. **Rotate the earlier token** — GitHub auto-flags tokens pasted into chats; retire the old one when convenient
+4. **W2 backlog** (parallel with Phase 1): media download/upload through the bridge, presence/typing, group metadata polish, PWA manifest
+5. **Rotate the earlier token** — GitHub auto-flags tokens pasted into chats; retire the old one when convenient

@@ -251,7 +251,11 @@ export function ChannelsSheet({
               </p>
               <p className={cn("mt-0.5 flex items-center gap-1.5 text-[12px]", TEXT_2)}>
                 <StatusDot account={account} />
-                {account.status === "connected" ? "Connected" : "Reconnecting"}
+                {account.status === "connected"
+                  ? "Connected"
+                  : account.status === "reconnecting"
+                    ? "Reconnecting"
+                    : "Offline"}
               </p>
             </div>
             <Switch

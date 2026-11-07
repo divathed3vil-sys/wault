@@ -1,10 +1,10 @@
-name: Deploy prototype to GitHub Pages
+name: Deploy Wault web to GitHub Pages
 
 on:
   push:
     branches: [v2]
     paths:
-      - "prototype/**"
+      - "web/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: prototype
+        working-directory: web
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +40,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: prototype/out
+          path: web/out
 
   deploy:
     needs: build

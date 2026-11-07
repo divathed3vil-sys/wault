@@ -22,12 +22,22 @@ export interface PairingResult {
   accent: string
 }
 
+export interface PairingLive {
+  /** Real QR (data URL) emitted by the bridge for the active session. */
+  qrDataUrl: string | null
+  /** True once the bridge reports the account connected. */
+  linked: boolean
+  onStart: (name: string, accentHex: string) => void
+}
+
 export function PairingFlow({
   onClose,
   onComplete,
+  live,
 }: {
   onClose: () => void
   onComplete: (result: PairingResult) => void
+  live?: PairingLive
 }) {
   const dark = usePhoneDark()
   const brand = dark ? BRAND.dark : BRAND.light
@@ -36,6 +46,12 @@ export function PairingFlow({
   const [name, setName] = React.useState("")
   const [accentId, setAccentId] = React.useState("emerald")
   const accent = ACCENTS.find((a) => a.id === accentId) ?? ACCENTS[0]
+
+  // Live pairing: the moment the bridge reports the device linked, advance
+  // to the success step.
+  React.useEffect(() => {
+    if (live?.linked && step === 2) setStep(3)
+  }, [live?.linked, step])
 
   const stepVariants = {
     initial: { opacity: 0, y: 16 },
@@ -155,7 +171,10 @@ export function PairingFlow({
                 <TonalButton
                   variant="primary"
                   disabled={!name.trim()}
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    if (live) live.onStart(name.trim(), accent.hex)
+                    setStep(2)
+                  }}
                   className="w-full"
                 >
                   Continue
@@ -178,22 +197,38 @@ export function PairingFlow({
 
                   <div className={cn("rounded-3xl p-6 shadow-sm", SURFACE)}>
                     <div className="rounded-2xl bg-white p-3">
-                      <svg
-                        width={184}
-                        height={184}
-                        viewBox="0 0 21 21"
-                        shapeRendering="crispEdges"
-                        role="img"
-                        aria-label="Pairing QR code"
-                      >
-                        {QR_MATRIX.map((row, r) =>
-                          row.map((on, c) =>
-                            on ? (
-                              <rect key={`${r}-${c}`} x={c} y={r} width={1} height={1} fill="#17181A" />
-                            ) : null,
-                          ),
-                        )}
-                      </svg>
+                      {live ? (
+                        live.qrDataUrl ? (
+                          <img
+                            src={live.qrDataUrl}
+                            width={184}
+                            height={184}
+                            alt="Pairing QR code"
+                            className="h-[184px] w-[184px]"
+                          />
+                        ) : (
+                          <div className="grid h-[184px] w-[184px] place-items-center">
+                            <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/10 border-t-[#059669]" />
+                          </div>
+                        )
+                      ) : (
+                        <svg
+                          width={184}
+                          height={184}
+                          viewBox="0 0 21 21"
+                          shapeRendering="crispEdges"
+                          role="img"
+                          aria-label="Pairing QR code"
+                        >
+                          {QR_MATRIX.map((row, r) =>
+                            row.map((on, c) =>
+                              on ? (
+                                <rect key={`${r}-${c}`} x={c} y={r} width={1} height={1} fill="#17181A" />
+                              ) : null,
+                            ),
+                          )}
+                        </svg>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -212,16 +247,20 @@ export function PairingFlow({
                   aria-hidden
                 />
                 <span className={cn("text-[12px] font-medium", TEXT_PRIMARY)}>Waiting for scan…</span>
-                <span className={cn("text-[12px]", TEXT_2)}>Code refreshes in 45 s</span>
+                <span className={cn("text-[12px]", TEXT_2)}>
+                  {live ? "Code refreshes automatically" : "Code refreshes in 45 s"}
+                </span>
               </div>
 
               <div className="mt-7 flex gap-3">
                 <TonalButton variant="ghost" onClick={onClose} className="flex-1">
                   Cancel
                 </TonalButton>
-                <TonalButton variant="primary" onClick={() => setStep(3)} className="flex-1">
-                  Simulate scan
-                </TonalButton>
+                {live ? null : (
+                  <TonalButton variant="primary" onClick={() => setStep(3)} className="flex-1">
+                    Simulate scan
+                  </TonalButton>
+                )}
               </div>
             </motion.div>
           ) : null}
@@ -269,7 +308,9 @@ export function PairingFlow({
                     transition={{ duration: 2.2, ease: "easeInOut" }}
                   />
                 </div>
-                <p className={cn("mt-2 text-[11px]", TEXT_2)}>Syncing 214 chats…</p>
+                <p className={cn("mt-2 text-[11px]", TEXT_2)}>
+                  {live ? "Syncing chats…" : "Syncing 214 chats…"}
+                </p>
               </div>
 
               <div className="mt-7 w-full">

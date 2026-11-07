@@ -39,17 +39,28 @@ export function ConversationScreen({
   chat,
   account,
   onBack,
+  live,
 }: {
   chat: Chat
   account: Account
   onBack: () => void
+  /** Present in live (bridge) mode: messages come from the store, sends hit
+   *  the bridge with an optimistic local echo. Absent → demo script. */
+  live?: { messages: Message[]; onSend: (text: string) => void }
 }) {
   const dark = usePhoneDark()
   const accent = account.accent
-  const [messages, setMessages] = React.useState<Message[]>(() => buildConversation(chat))
+  const [messages, setMessages] = React.useState<Message[]>(() =>
+    live ? live.messages : buildConversation(chat),
+  )
   const [draft, setDraft] = React.useState("")
   const listRef = React.useRef<HTMLDivElement>(null)
   const timersRef = React.useRef<number[]>([])
+
+  // Live mode: the store is the single source of truth — mirror it in.
+  React.useEffect(() => {
+    if (live) setMessages(live.messages)
+  }, [live])
 
   const scrollToBottom = React.useCallback(() => {
     const el = listRef.current
@@ -72,6 +83,13 @@ export function ConversationScreen({
   const send = () => {
     const text = draft.trim()
     if (!text) return
+    setDraft("")
+    if (live) {
+      // Optimistic bubble lands via the store; the bridge ack swaps the tmp
+      // message for the real one and receipts upgrade the ticks.
+      live.onSend(text)
+      return
+    }
     const now = new Date()
     const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
     const id = `sent-${messages.length + 1}`
@@ -79,7 +97,6 @@ export function ConversationScreen({
       ...prev,
       { id, direction: "out", time, kind: "text", text, delivery: "sent" },
     ])
-    setDraft("")
     const timer = window.setTimeout(() => {
       setMessages((prev) =>
         prev.map((m) => (m.id === id ? { ...m, delivery: "read" as const } : m)),

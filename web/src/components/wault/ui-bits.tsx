@@ -88,6 +88,7 @@ const STATUS_COLORS: Record<
 > = {
   connected: { dot: "#10B981", textLight: "#047857", textDark: "#34D399" },
   reconnecting: { dot: "#F59E0B", textLight: "#B45309", textDark: "#FBBF24" },
+  disconnected: { dot: "#9AA0A6", textLight: "#6B6F76", textDark: "#9AA0A6" },
 }
 
 export function StatusPill({ status, label }: { status: AccountStatus; label?: string }) {
@@ -107,7 +108,12 @@ export function StatusPill({ status, label }: { status: AccountStatus; label?: s
         animate={status === "reconnecting" ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
         transition={status === "reconnecting" ? { duration: 1.4, repeat: Infinity, ease: "easeInOut" } : undefined}
       />
-      {label ?? (status === "connected" ? "Connected" : "Reconnecting")}
+      {label ??
+        (status === "connected"
+          ? "Connected"
+          : status === "reconnecting"
+            ? "Reconnecting"
+            : "Offline")}
     </span>
   )
 }
@@ -117,7 +123,12 @@ export function StatusPill({ status, label }: { status: AccountStatus; label?: s
 /* ------------------------------------------------------------------ */
 
 export function StatusDot({ account }: { account: Account }) {
-  const color = account.status === "connected" ? "#10B981" : "#F59E0B"
+  const color =
+    account.status === "connected"
+      ? "#10B981"
+      : account.status === "reconnecting"
+        ? "#F59E0B"
+        : "#9AA0A6"
   return (
     <motion.span
       className="inline-block h-2 w-2 shrink-0 rounded-full"

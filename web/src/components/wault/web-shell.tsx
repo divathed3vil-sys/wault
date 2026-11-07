@@ -42,6 +42,7 @@ import {
   UnreadBadge,
 } from "./ui-bits"
 import { AccountSwitcherSheet, NewMessageSheet } from "./account-switcher"
+import { liveActions } from "./live"
 import { ConversationScreen } from "./screens/conversation-screen"
 import { PairingFlow, type PairingResult } from "./screens/pairing-flow"
 import { SettingsScreen } from "./screens/settings-screen"
@@ -65,7 +66,7 @@ const RAIL_ITEMS: { id: WaultTab; label: string; icon: typeof ShieldCheck }[] = 
   { id: "settings", label: "Settings", icon: Settings2 },
 ]
 
-export function WebShell() {
+export function WebShell({ variant = "framed" }: { variant?: "framed" | "app" }) {
   const tab = useWaultStore((s) => s.tab)
   const overlay = useWaultStore((s) => s.overlay)
   const sheet = useWaultStore((s) => s.sheet)
@@ -73,8 +74,11 @@ export function WebShell() {
   const accounts = useWaultStore((s) => s.accounts)
   const chats = useWaultStore((s) => s.chats)
   const theme = useWaultStore((s) => s.theme)
+  const mode = useWaultStore((s) => s.mode)
+  const live = useWaultStore((s) => s.live)
+  const pairing = useWaultStore((s) => s.pairing)
+  const messagesByChat = useWaultStore((s) => s.messagesByChat)
   const setTab = useWaultStore((s) => s.setTab)
-  const openConversation = useWaultStore((s) => s.openConversation)
   const openPairing = useWaultStore((s) => s.openPairing)
   const closeOverlay = useWaultStore((s) => s.closeOverlay)
   const setSheet = useWaultStore((s) => s.setSheet)
@@ -91,6 +95,7 @@ export function WebShell() {
   // PhoneFrame). The scale transform also gives vaul's fixed-positioned
   // sheets a containing block, keeping them inside the window frame.
   React.useEffect(() => {
+    if (variant === "app") return
     const el = frameWrapRef.current
     if (!el) return
     const measure = () => {
@@ -101,7 +106,7 @@ export function WebShell() {
     const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [variant])
 
   const dark = theme === "dark"
   const slotsFull = accounts.length >= DEVICE_SLOTS
@@ -111,6 +116,12 @@ export function WebShell() {
   )
 
   const completePairing = (result: PairingResult) => {
+    if (mode === "app" && live) {
+      // Live mode: the account was created by the bridge at pairing start.
+      closeOverlay()
+      setTab("vault")
+      return
+    }
     addAccount({
       id: `a${accounts.length + 1}`,
       name: result.name,
@@ -140,7 +151,22 @@ export function WebShell() {
     const account = chat ? accounts.find((a) => a.id === chat.accountId) : undefined
     if (chat && account) {
       conversationNode = (
-        <ConversationScreen key={chat.id} chat={chat} account={account} onBack={closeOverlay} />
+        <ConversationScreen
+          key={chat.id}
+          chat={chat}
+          account={account}
+          onBack={closeOverlay}
+          live={
+            mode === "app" && live
+              ? {
+                  messages: messagesByChat[chat.id] ?? [],
+                  onSend: (text: string) => {
+                    void liveActions.sendMessage(chat.id, text)
+                  },
+                }
+              : undefined
+          }
+        />
       )
     }
   }
@@ -149,30 +175,14 @@ export function WebShell() {
   // while the phone view was active) still surfaces in the inbox context.
   const showInbox = tab === "inbox" || overlay?.type === "conversation"
 
-  return (
-    <div className="my-10">
-      <div ref={frameWrapRef} className="relative w-full" style={{ height: FRAME_H * scale }}>
-        <div
-          className="mx-auto w-[1100px] shrink-0"
-          style={{ transform: `scale(${scale})`, transformOrigin: "top center", height: FRAME_H }}
-        >
-          <div
-            className={cn(
-              "relative flex h-[740px] w-full flex-col overflow-hidden rounded-2xl border",
-              "border-black/[0.08] bg-[#F7F7F5] shadow-[0_40px_80px_-24px_rgba(0,0,0,0.3)]",
-              "dark:border-white/[0.1] dark:bg-[#0C0D0F]",
-              dark && "dark",
-            )}
-            style={
-              {
-                "--wa-bg": dark ? "#0C0D0F" : "#F7F7F5",
-                "--wa-hairline": dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)",
-              } as React.CSSProperties
-            }
-          >
-            <ChromeBar />
+  const cssVars = {
+    "--wa-bg": dark ? "#0C0D0F" : "#F7F7F5",
+    "--wa-hairline": dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)",
+  } as React.CSSProperties
 
-            <PhoneThemeProvider dark={dark}>
+  const frameInner = (
+    <>
+      <PhoneThemeProvider dark={dark}>
               <div className="relative flex min-h-0 flex-1">
                 {/* Region 1 — icon rail */}
                 <nav
@@ -392,7 +402,7 @@ export function WebShell() {
                       activeChatId={activeChatId}
                       conversationNode={conversationNode}
                       onFilter={setInboxFilter}
-                      onOpenChat={openConversation}
+                      onOpenChat={(chatId) => liveActions.openChat(chatId)}
                       onNewMessage={() => setSheet("newmessage")}
                     />
                   ) : null}
@@ -450,22 +460,37 @@ export function WebShell() {
                           SURFACE,
                         )}
                       >
-                        <PairingFlow onClose={closeOverlay} onComplete={completePairing} />
+                        <PairingFlow
+                          onClose={closeOverlay}
+                          onComplete={completePairing}
+                          live={
+                            mode === "app"
+                              ? {
+                                  qrDataUrl: pairing?.qrDataUrl ?? null,
+                                  linked: pairing?.linked ?? false,
+                                  onStart: (name: string, accentHex: string) => {
+                                    void liveActions.startPairing(name, accentHex)
+                                  },
+                                }
+                              : undefined
+                          }
+                        />
                       </div>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
               </div>
-            </PhoneThemeProvider>
+      </PhoneThemeProvider>
 
-            {/* Portal host for vaul sheets; the scaled ancestor scopes their
-                fixed positioning to this window frame. */}
-            <div ref={setSheetHost} className="contents" />
-          </div>
-        </div>
-      </div>
+      {/* Portal host for vaul sheets; the scaled ancestor scopes their
+          fixed positioning to this window frame. */}
+      <div ref={setSheetHost} className="contents" />
+    </>
+  )
 
-      {/* Shared sheets — portaled into the window frame */}
+  const sheets = (
+    <>
+      {/* Shared sheets — portaled into the shell */}
       <AccountSwitcherSheet
         open={sheet === "switcher"}
         onOpenChange={(open) => {
@@ -496,6 +521,48 @@ export function WebShell() {
         host={sheetHost}
         accounts={accounts}
       />
+    </>
+  )
+
+  if (variant === "app") {
+    return (
+      <>
+        <div
+          className={cn(
+            "relative flex h-full w-full flex-col overflow-hidden bg-[#F7F7F5] dark:bg-[#0C0D0F]",
+            dark && "dark",
+          )}
+          style={cssVars}
+        >
+          {frameInner}
+        </div>
+        {sheets}
+      </>
+    )
+  }
+
+  return (
+    <div className="my-10">
+      <div ref={frameWrapRef} className="relative w-full" style={{ height: FRAME_H * scale }}>
+        <div
+          className="mx-auto w-[1100px] shrink-0"
+          style={{ transform: `scale(${scale})`, transformOrigin: "top center", height: FRAME_H }}
+        >
+          <div
+            className={cn(
+              "relative flex h-[740px] w-full flex-col overflow-hidden rounded-2xl border",
+              "border-black/[0.08] bg-[#F7F7F5] shadow-[0_40px_80px_-24px_rgba(0,0,0,0.3)]",
+              "dark:border-white/[0.1] dark:bg-[#0C0D0F]",
+              dark && "dark",
+            )}
+            style={cssVars}
+          >
+            <ChromeBar />
+            {frameInner}
+          </div>
+        </div>
+      </div>
+      {sheets}
     </div>
   )
 }

@@ -4,7 +4,7 @@
  * everything here must render identically on server and client.
  */
 
-export type AccountStatus = "connected" | "reconnecting"
+export type AccountStatus = "connected" | "reconnecting" | "disconnected"
 
 export interface Account {
   id: string

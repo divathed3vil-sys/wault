@@ -3,7 +3,15 @@ node_modules/
 .next/
 out/
 
-# Flutter / Dart (web client, Phase 5)
+# Bun
+.bun/
+
+# Wault Bridge — session keys, database and logs must NEVER be committed
+bridge/data/
+bridge/bridge.log
+bridge/nohup.out
+
+# Flutter / Dart (future)
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
