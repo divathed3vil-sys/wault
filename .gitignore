@@ -1,0 +1,27 @@
+# Node / Next
+node_modules/
+.next/
+out/
+
+# Flutter / Dart (web client, Phase 5)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+
+# Android (Phase 1+)
+.gradle/
+build/
+local.properties
+*.jks
+*.keystore
+.cxx/
+
+# IDE / misc
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.log
+.env
+.env.*
